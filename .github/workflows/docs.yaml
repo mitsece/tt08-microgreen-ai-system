@@ -1,17 +1,53 @@
 name: docs
-
 on:
   push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  docs:
+  build-docs:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Build docs
-        uses: TinyTapeout/tt-gds-action/docs@tt08
+      
+      - name: Checkout TinyTapeout tools
+        uses: actions/checkout@v4
+        with:
+          repository: TinyTapeout/tt-support-tools
+          path: tt
+          ref: tt07
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Typst
+        uses: typst-community/setup-typst@v3
+        with:
+          typst-version: 'latest'
+      
+      - name: Verify Typst installation
+        run: typst --version
+      
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
+      
+      - name: Install Python dependencies
+        run: pip install -r tt/requirements.txt
+      
+      - name: Build TinyTapeout datasheet
+        run: ./tt/tt_tool.py --create-pdf
+      
+      - name: Upload documentation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: datasheet
+          path: datasheet.pdf
+          if-no-files-found: error
