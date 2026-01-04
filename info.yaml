@@ -23,7 +23,6 @@ project:
     - "camera_interface.v"
     - "uart_rx.v"
     - "uart_tx.v"
-    - "cnn_weights.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 pinout:
