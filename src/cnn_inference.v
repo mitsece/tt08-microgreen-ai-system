@@ -43,13 +43,8 @@ localparam IMG_SIZE = 1024;
 // ============================================================
 // INCLUDE WEIGHTS (Generated from training)
 // ============================================================
-// This file contains reg declarations and initial blocks
-// WEIGHTS: Included from external file
-// This file contains reg declarations and initial blocks
-`include "../asic_weights_tiny/cnn_weights.v"
-
-// TEMPORARY: Placeholder removed. Using real weights.
-
+// FIXED: Changed to correct include path
+`include "cnn_weights.v"
 
 // ============================================================
 // MEMORY & BUFFERS
@@ -157,3 +152,5 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 endmodule
+
+`default_nettype wire
