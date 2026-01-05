@@ -7,7 +7,7 @@
   "//": "If you get stuck with this config, please open an issue or get in touch via the discord.",
   "//": "ADDED FOR PRECISION FARMING ASIC - These variables are required",
   "DESIGN_NAME": "tt_um_precision_farming",
-  "VERILOG_FILES": "dir::src/project.v dir::src/main_processor_top.v dir::src/cnn_inference.v dir::src/cnn_weights.v dir::src/camera_interface.v dir::src/uart_rx.v dir::src/uart_tx.v",
+  "VERILOG_FILES": "src/*.v",
   "//": "Here are some of the variables you may want to change:",
   "//": "PL_TARGET_DENSITY - You can increase this if Global Placement fails with error GPL-0302.",
   "//": "Users have reported that values up to 0.8 worked well for them.",
