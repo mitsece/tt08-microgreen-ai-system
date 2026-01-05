@@ -90,7 +90,7 @@ module tt_um_precision_farming (
   // MAIN PROCESSOR INSTANTIATION
   // ============================================================
   
-  main_processor_asic main_proc (
+  main_processor_top main_proc (
     .clk(clk),
     .rst_n(rst_n & ena),  // Combine reset with enable
     
