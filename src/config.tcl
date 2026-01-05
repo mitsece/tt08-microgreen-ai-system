@@ -5,14 +5,14 @@
 set ::env(DESIGN_NAME) "tt_um_precision_farming"
 
 # Verilog source files
+# NOTE: cnn_weights.v is NOT listed here because it's included via `include directive in cnn_inference.v
 set ::env(VERILOG_FILES) "\
     $::env(DESIGN_DIR)/project.v \
     $::env(DESIGN_DIR)/main_processor_top.v \
     $::env(DESIGN_DIR)/cnn_inference.v \
     $::env(DESIGN_DIR)/camera_interface.v \
     $::env(DESIGN_DIR)/uart_rx.v \
-    $::env(DESIGN_DIR)/uart_tx.v \
-    $::env(DESIGN_DIR)/cnn_weights.v"
+    $::env(DESIGN_DIR)/uart_tx.v"
 
 # Clock configuration
 set ::env(CLOCK_PERIOD) "20"
