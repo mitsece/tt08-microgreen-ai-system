@@ -55,8 +55,7 @@
   "LEFT_MARGIN_MULT": 6,
   "RIGHT_MARGIN_MULT": 6,
 
-  "//": "Absolute die size",
-  "FP_SIZING": "absolute",
+  "//": "Absolute die size",,
 
   "PL_BASIC_PLACEMENT": 0,
   "GRT_ALLOW_CONGESTION": 1,
