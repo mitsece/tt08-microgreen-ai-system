@@ -5,8 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
-
+PROJECT_SOURCES = project.v main_processor_top.v cnn_inference.v camera_interface.v uart_rx.v uart_tx.v
 ifneq ($(GATES),yes)
 
 # RTL simulation:
