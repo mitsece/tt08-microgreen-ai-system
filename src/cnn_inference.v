@@ -1,5 +1,10 @@
 // ============================================================
-// ULTRA-TINY CNN INFERENCE ENGINE
+// ULTRA-TINY CNN - Fits in 2x2 TinyTapeout Tiles (~10K cells)
+// ============================================================
+// Absolute minimal CNN for proof-of-concept
+// Input: 8x8 grayscale (4-bit per pixel to save space)
+// Architecture: 1 conv layer, global pool, 1 dense layer
+// Total memory: ~500 bytes = ~4000 cells
 // ============================================================
 
 `timescale 1ns / 1ps
@@ -8,171 +13,188 @@
 module cnn_inference (
     input wire clk,
     input wire rst_n,
-    input wire [7:0] pixel_in,
+    
+    // Streaming pixel input (4-bit to save space)
+    input wire [3:0] pixel_in,
     input wire pixel_valid,
     input wire frame_start,
-    output reg classification,
+    
+    // Output
+    output reg classification,  // 0=growth, 1=harvest
     output reg [7:0] confidence,
-    output reg ready,
-    output reg busy
+    output reg ready
 );
 
 // ============================================================
-// PARAMETERS
+// PARAMETERS - Absolute minimum for 2x2 tiles
 // ============================================================
-localparam IMG_WIDTH = 32;
-localparam IMG_HEIGHT = 32;
-localparam IMG_SIZE = 1024;
+localparam IMG_SIZE = 64;      // 8x8 image
+localparam NUM_FILTERS = 2;    // Just 2 filters
+localparam KERNEL_SIZE = 9;    // 3x3 kernel
 
 // ============================================================
-// WEIGHT DECLARATIONS
+// WEIGHTS - Hardcoded as wires (no memory arrays!)
 // ============================================================
-`include "cnn_weights.v"
+// Filter 0: 3x3 weights (4-bit signed)
+wire signed [3:0] f0_w[0:8];
+assign f0_w[0] = 4'sd2;
+assign f0_w[1] = 4'sd3;
+assign f0_w[2] = -4'sd1;
+assign f0_w[3] = 4'sd1;
+assign f0_w[4] = -4'sd3;
+assign f0_w[5] = 4'sd2;
+assign f0_w[6] = -4'sd2;
+assign f0_w[7] = 4'sd4;
+assign f0_w[8] = -4'sd3;
+
+// Filter 1: 3x3 weights
+wire signed [3:0] f1_w[0:8];
+assign f1_w[0] = 4'sd1;
+assign f1_w[1] = -4'sd2;
+assign f1_w[2] = 4'sd3;
+assign f1_w[3] = 4'sd2;
+assign f1_w[4] = -4'sd4;
+assign f1_w[5] = -4'sd1;
+assign f1_w[6] = 4'sd4;
+assign f1_w[7] = 4'sd1;
+assign f1_w[8] = -4'sd3;
+
+// Dense layer weights (2 inputs -> 1 output)
+wire signed [7:0] dense_w[0:1];
+assign dense_w[0] = 8'sd45;   // Weight for filter 0
+assign dense_w[1] = -8'sd38;  // Weight for filter 1
 
 // ============================================================
-// WEIGHT INITIALIZATION
+// MINIMAL STORAGE - Only what's absolutely necessary
 // ============================================================
-initial begin
-    // Conv2d weights (8 filters × 3×3)
-    conv2d_w[0] = 8'd14;    conv2d_w[1] = 8'd53;    conv2d_w[2] = -8'd27;   conv2d_w[3] = 8'd16;
-    conv2d_w[4] = -8'd78;   conv2d_w[5] = 8'd70;    conv2d_w[6] = -8'd41;   conv2d_w[7] = 8'd127;
-    conv2d_w[8] = -8'd84;   conv2d_w[9] = 8'd22;    conv2d_w[10] = -8'd47;  conv2d_w[11] = 8'd68;
-    conv2d_w[12] = 8'd27;   conv2d_w[13] = -8'd102; conv2d_w[14] = -8'd29;  conv2d_w[15] = 8'd111;
-    conv2d_w[16] = 8'd14;   conv2d_w[17] = -8'd93;  conv2d_w[18] = 8'd92;   conv2d_w[19] = 8'd29;
-    conv2d_w[20] = -8'd40;  conv2d_w[21] = -8'd10;  conv2d_w[22] = -8'd42;  conv2d_w[23] = -8'd47;
-    conv2d_w[24] = 8'd48;   conv2d_w[25] = -8'd5;   conv2d_w[26] = -8'd72;  conv2d_w[27] = -8'd49;
-    conv2d_w[28] = 8'd80;   conv2d_w[29] = -8'd15;  conv2d_w[30] = -8'd37;  conv2d_w[31] = 8'd59;
-    conv2d_w[32] = -8'd29;  conv2d_w[33] = 8'd66;   conv2d_w[34] = -8'd61;  conv2d_w[35] = 8'd78;
-    conv2d_w[36] = -8'd54;  conv2d_w[37] = 8'd20;   conv2d_w[38] = 8'd18;   conv2d_w[39] = -8'd87;
-    conv2d_w[40] = -8'd28;  conv2d_w[41] = 8'd59;   conv2d_w[42] = 8'd39;   conv2d_w[43] = -8'd51;
-    conv2d_w[44] = 8'd41;   conv2d_w[45] = -8'd70;  conv2d_w[46] = 8'd111;  conv2d_w[47] = -8'd2;
-    conv2d_w[48] = -8'd51;  conv2d_w[49] = 8'd2;    conv2d_w[50] = 8'd38;   conv2d_w[51] = -8'd112;
-    conv2d_w[52] = 8'd70;   conv2d_w[53] = 8'd90;   conv2d_w[54] = 8'd83;   conv2d_w[55] = -8'd66;
-    conv2d_w[56] = 8'd14;   conv2d_w[57] = 8'd94;   conv2d_w[58] = 8'd36;   conv2d_w[59] = -8'd94;
-    conv2d_w[60] = -8'd43;  conv2d_w[61] = -8'd28;  conv2d_w[62] = -8'd45;  conv2d_w[63] = 8'd93;
-    conv2d_w[64] = -8'd22;  conv2d_w[65] = -8'd4;   conv2d_w[66] = 8'd98;   conv2d_w[67] = 8'd75;
-    conv2d_w[68] = 8'd37;   conv2d_w[69] = 8'd50;   conv2d_w[70] = 8'd107;  conv2d_w[71] = -8'd75;
-    
-    // Conv2d biases
-    conv2d_b[0] = -8'd81;  conv2d_b[1] = -8'd39;  conv2d_b[2] = -8'd47;  conv2d_b[3] = -8'd127;
-    conv2d_b[4] = -8'd25;  conv2d_b[5] = -8'd111; conv2d_b[6] = -8'd54;  conv2d_b[7] = -8'd81;
-    
-    // Conv2d_1 weights (16 filters × 8 channels × 3×3) - first 64 values shown
-    conv2d_1_w[0] = -8'd17;  conv2d_1_w[1] = 8'd35;   conv2d_1_w[2] = -8'd39;  conv2d_1_w[3] = 8'd17;
-    conv2d_1_w[4] = -8'd13;  conv2d_1_w[5] = 8'd39;   conv2d_1_w[6] = -8'd11;  conv2d_1_w[7] = 8'd9;
-    conv2d_1_w[8] = 8'd1;    conv2d_1_w[9] = 8'd9;    conv2d_1_w[10] = 8'd18;  conv2d_1_w[11] = 8'd2;
-    conv2d_1_w[12] = 8'd54;  conv2d_1_w[13] = -8'd35; conv2d_1_w[14] = 8'd8;   conv2d_1_w[15] = -8'd86;
-    // Initialize remaining to 0 for synthesis - replace with actual values for production
-    for (integer i = 16; i < 1152; i = i + 1) conv2d_1_w[i] = 8'd0;
-    
-    // Conv2d_1 biases
-    conv2d_1_b[0] = -8'd9;   conv2d_1_b[1] = 8'd2;    conv2d_1_b[2] = 8'd100;  conv2d_1_b[3] = -8'd64;
-    conv2d_1_b[4] = -8'd93;  conv2d_1_b[5] = -8'd73;  conv2d_1_b[6] = -8'd127; conv2d_1_b[7] = -8'd69;
-    conv2d_1_b[8] = -8'd38;  conv2d_1_b[9] = 8'd59;   conv2d_1_b[10] = -8'd82; conv2d_1_b[11] = -8'd92;
-    conv2d_1_b[12] = -8'd78; conv2d_1_b[13] = -8'd110;conv2d_1_b[14] = -8'd89; conv2d_1_b[15] = 8'd0;
-    
-    // Dense weights (16 → 8) - first 32 values shown
-    dense_w[0] = 8'd26;   dense_w[1] = 8'd61;   dense_w[2] = -8'd35;  dense_w[3] = -8'd76;
-    dense_w[4] = -8'd34;  dense_w[5] = -8'd83;  dense_w[6] = 8'd26;   dense_w[7] = -8'd21;
-    dense_w[8] = -8'd63;  dense_w[9] = 8'd112;  dense_w[10] = 8'd25;  dense_w[11] = 8'd28;
-    // Initialize remaining to 0 for synthesis
-    for (integer i = 12; i < 128; i = i + 1) dense_w[i] = 8'd0;
-    
-    // Dense biases
-    dense_b[0] = -8'd42; dense_b[1] = 8'd94;  dense_b[2] = -8'd58; dense_b[3] = -8'd73;
-    dense_b[4] = 8'd127; dense_b[5] = 8'd106; dense_b[6] = 8'd99;  dense_b[7] = -8'd55;
-    
-    // Dense_1 weights (8 → 1)
-    dense_1_w[0] = -8'd103; dense_1_w[1] = 8'd127;  dense_1_w[2] = -8'd105; dense_1_w[3] = -8'd93;
-    dense_1_w[4] = 8'd45;   dense_1_w[5] = 8'd81;   dense_1_w[6] = 8'd108;  dense_1_w[7] = -8'd95;
-    
-    // Dense_1 bias
-    dense_1_b[0] = 8'd127;
-end
+// Input: Only store 3 rows at a time for convolution (sliding window)
+reg [3:0] row_buffer[0:23];  // 3 rows × 8 cols = 24 pixels (96 bits)
+
+// Feature maps: Just store the accumulated sums
+reg signed [15:0] feature_sum[0:1];  // 2 filters
 
 // ============================================================
-// MEMORY & BUFFERS
+// CONTROL SIGNALS
 // ============================================================
-reg [7:0] input_buffer [0:1023];
-reg [7:0] feat_map_1 [0:2047];
-reg [7:0] feat_map_2 [0:1023];
-reg [7:0] gap_output [0:15];
-reg [7:0] dense1_out [0:7];
-reg [7:0] final_logit;
-reg [10:0] pix_cnt;
+reg [6:0] pixel_count;
+reg [2:0] row_idx;
+reg [2:0] col_idx;
+
+// State machine
+reg [1:0] state;
+localparam IDLE = 0, LOADING = 1, CONV = 2, DENSE = 3;
+
+// Convolution counter
+reg [5:0] conv_position;  // Position in 6x6 valid conv area
 
 // ============================================================
-// INPUT LOADING
+// PIXEL LOADING with Sliding Window
 // ============================================================
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        pix_cnt <= 0;
-    end else begin
-        if (frame_start) pix_cnt <= 0;
-        else if (pixel_valid && pix_cnt < IMG_SIZE) begin
-            input_buffer[pix_cnt] <= pixel_in;
-            pix_cnt <= pix_cnt + 1;
-        end
-    end
-end
-
-// ============================================================
-// INFERENCE FSM
-// ============================================================
-localparam IDLE = 0, C1=1, C2=2, GAP=3, D1=4, OUT=5;
-reg [2:0] state;
-reg [15:0] cnt;
-
-always @(posedge clk or negedge rst_n) begin
-    if (!rst_n) begin
+        pixel_count <= 0;
+        row_idx <= 0;
+        col_idx <= 0;
         state <= IDLE;
         ready <= 0;
-        busy <= 0;
-        cnt <= 0;
+        for (integer i = 0; i < 24; i = i + 1)
+            row_buffer[i] <= 0;
     end else begin
         case (state)
             IDLE: begin
                 ready <= 0;
-                if (pix_cnt == IMG_SIZE) begin
-                    state <= C1;
-                    busy <= 1;
-                    cnt <= 0;
+                if (frame_start) begin
+                    pixel_count <= 0;
+                    row_idx <= 0;
+                    col_idx <= 0;
+                    state <= LOADING;
+                    feature_sum[0] <= 0;
+                    feature_sum[1] <= 0;
+                    conv_position <= 0;
                 end
             end
             
-            C1: begin
-                if (cnt == 200) begin
-                    state <= C2;
-                    cnt <= 0;
-                end else cnt <= cnt + 1;
+            LOADING: begin
+                if (pixel_valid) begin
+                    // Store in sliding window buffer
+                    // We only keep 3 rows in memory
+                    if (row_idx < 3) begin
+                        row_buffer[row_idx * 8 + col_idx] <= pixel_in;
+                    end else begin
+                        // Shift rows: row0 <- row1, row1 <- row2, row2 <- new
+                        // This is expensive, so we use indexing trick instead
+                        row_buffer[((row_idx % 3) * 8) + col_idx] <= pixel_in;
+                    end
+                    
+                    // Process convolution when we have 3x3 window ready
+                    if (row_idx >= 2 && col_idx >= 2) begin
+                        // We can compute one convolution output here
+                        // This is done in parallel with loading
+                        state <= CONV;
+                    end
+                    
+                    // Update position
+                    if (col_idx == 7) begin
+                        col_idx <= 0;
+                        row_idx <= row_idx + 1;
+                    end else begin
+                        col_idx <= col_idx + 1;
+                    end
+                    
+                    pixel_count <= pixel_count + 1;
+                    
+                    if (pixel_count == IMG_SIZE - 1) begin
+                        state <= DENSE;  // Move to final decision
+                    end
+                end
             end
             
-            C2: begin
-                if (cnt == 200) begin
-                    state <= GAP;
-                    cnt <= 0;
-                end else cnt <= cnt + 1;
+            CONV: begin
+                // Perform 3x3 convolution at current position
+                // This is simplified - in reality you'd pipeline this
+                
+                // Extract 3x3 window (simplified indexing)
+                reg signed [15:0] sum0, sum1;
+                integer r, c, idx;
+                
+                sum0 = 0;
+                sum1 = 0;
+                
+                for (r = 0; r < 3; r = r + 1) begin
+                    for (c = 0; c < 3; c = c + 1) begin
+                        idx = ((row_idx - 2 + r) % 3) * 8 + (col_idx - 2 + c);
+                        sum0 = sum0 + ($signed({1'b0, row_buffer[idx]}) * f0_w[r*3 + c]);
+                        sum1 = sum1 + ($signed({1'b0, row_buffer[idx]}) * f1_w[r*3 + c]);
+                    end
+                end
+                
+                // ReLU and accumulate (Global Average Pooling)
+                if (sum0 > 0) feature_sum[0] <= feature_sum[0] + sum0;
+                if (sum1 > 0) feature_sum[1] <= feature_sum[1] + sum1;
+                
+                state <= LOADING;  // Go back to loading
             end
             
-            GAP: begin
-                if (cnt == 50) begin
-                    state <= D1;
-                    cnt <= 0;
-                end else cnt <= cnt + 1;
-            end
-            
-            D1: begin
-                if (cnt == 50) begin
-                    state <= OUT;
-                    cnt <= 0;
-                end else cnt <= cnt + 1;
-            end
-            
-            OUT: begin
-                classification <= (input_buffer[512] > 100); 
-                confidence <= 8'd90;
+            DENSE: begin
+                // Final classification layer
+                reg signed [23:0] output_logit;
+                
+                // Dense layer: 2 inputs -> 1 output
+                output_logit = (feature_sum[0] * dense_w[0]) + 
+                               (feature_sum[1] * dense_w[1]);
+                
+                // Sigmoid approximation: if positive -> harvest (1), else growth (0)
+                classification <= (output_logit > 0);
+                
+                // Confidence based on magnitude
+                if (output_logit > 1000 || output_logit < -1000)
+                    confidence <= 8'd95;
+                else if (output_logit > 500 || output_logit < -500)
+                    confidence <= 8'd80;
+                else
+                    confidence <= 8'd60;
+                
                 ready <= 1;
-                busy <= 0;
                 state <= IDLE;
             end
         endcase
