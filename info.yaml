@@ -50,7 +50,6 @@ pinout:
   uio[5]: "Camera HREF (IN)"
   uio[6]: "Camera VSYNC (IN)"
   uio[7]: "Mode Select (IN)"
-  uio[7]: ""
 
 # Do not change!
 yaml_version: 6
