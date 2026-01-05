@@ -9,11 +9,15 @@
 
   "//": "If you get stuck with this config, please open an issue or get in touch via the discord.",
 
+  "//": "ADDED FOR PRECISION FARMING ASIC - These variables are required",
+  "DESIGN_NAME": "tt_um_precision_farming",
+  "VERILOG_FILES": "dir::src/project.v dir::src/main_processor_top.v dir::src/cnn_inference.v dir::src/camera_interface.v dir::src/uart_rx.v dir::src/uart_tx.v",
+
   "//": "Here are some of the variables you may want to change:",
 
   "//": "PL_TARGET_DENSITY - You can increase this if Global Placement fails with error GPL-0302.",
   "//": "Users have reported that values up to 0.8 worked well for them.",
-  "PL_TARGET_DENSITY": 0.6,
+  "PL_TARGET_DENSITY": 0.55,
 
   "//": "CLOCK_PERIOD - Increase this in case you are getting setup time violations.",
   "//": "The value is in nanoseconds, so 20ns == 50MHz.",
@@ -33,9 +37,9 @@
 
   "//": "Configuration docs: https://openlane.readthedocs.io/en/latest/reference/configuration.html",
 
-  "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+  "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
   "//": "!!! DO NOT CHANGE ANYTHING BELOW THIS POINT !!!",
-  "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
+  "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
 
   "//": "Save some time",
   "RUN_KLAYOUT_XOR": 0,
@@ -76,8 +80,8 @@
   "//": "Clock",
   "RUN_CTS": 1,
 
-  "//": "Don't use power rings or met5 layer",
-  "DESIGN_IS_CORE": 0,
+  "//": "Don't use power rings or met5 layer - UPDATED FOR 2x2 TILE",
+  "FP_PDN_MULTILAYER": 0,
   "RT_MAX_LAYER": "met4",
 
   "//": "MAGIC_DEF_LABELS may cause issues with LVS",
