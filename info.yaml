@@ -10,10 +10,7 @@ project:
   clock_hz:     100000000
   tiles:        "2x2"
   top_module:   "tt_um_precision_farming"
-
-# Sources - Listed for the build system
-source:
-  files:
+  source_files:
     - "project.v"
     - "main_processor_top.v"
     - "cnn_inference.v"
@@ -47,6 +44,7 @@ pinout:
   uio[5]: "HREF"
   uio[6]: "VSYNC"
   uio[7]: "MODE"
+
 
 
 # Do not change!
