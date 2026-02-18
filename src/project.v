@@ -1,4 +1,4 @@
-// MONOLITHIC PROJECT FILE
+// MONOLITHIC PROJECT FILE - CLEANED FOR ASIC SYNTHESIS
 `default_nettype none
 `timescale 1ns / 1ps
 
@@ -312,7 +312,7 @@ assign uart_tx_valid = uart_rx_valid;  // Echo back
 
 endmodule
 
-
+`default_nettype wire
 
 
 // --- From src/cnn_inference.v ---
@@ -1933,7 +1933,6 @@ end
         end
 
         DONE: begin
-          $display("[%0t] CNN FINAL: acc=%d, conf=%d", $time, acc, (acc[23]) ? 8'd0 : (acc[22:17] > 0 ? 8'd255 : acc[16:9]));
           // Rescale confidence: Use acc[16:9] to get good range for ~100k peak
           classification <= (acc > 0);
           confidence <= (acc[23]) ? 8'd0 : (acc[22:17] > 0 ? 8'd255 : acc[16:9]); 
@@ -2138,7 +2137,7 @@ end
 
 endmodule
 
-
+`default_nettype wire
 
 
 // --- From src/uart_tx.v ---
@@ -2245,5 +2244,5 @@ end
 
 endmodule
 
-
+`default_nettype wire
 
