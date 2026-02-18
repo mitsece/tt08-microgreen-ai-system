@@ -1,13 +1,14 @@
 --- 
 # Tiny Tapeout Project Configuration
-
 project:
-  name: "tt_um_precision_farming"
-  description: "Microgreen Growth Monitor - 4 sensors + camera-based harvest detection for precision agriculture"
+  title: "Microgreen AI System"
+  description: "2-layer Nano-CNN for harvest detection with sensor fusion"
   picture: "docs/scheme.png"
   author: "User"
   license: "Apache-2.0"
-  family: "tt09"
+  language: "Verilog"
+  clock_hz: 100000000
+  tiles: "2x2"
 
 # Sources - Verified individual modules
 source:
@@ -20,37 +21,32 @@ source:
     - "camera_interface.v"
   top_module: "tt_um_precision_farming"
 
-# GDS Settings - 2x2 tile for enhanced microgreen monitor
-tiles: "2x2"
-docs: 
-  doc: "docs/info.md"
-
 # Pinout definition
 pinout:
-  ui[0]: "Camera Data D0"
-  ui[1]: "Camera Data D1"
-  ui[2]: "Camera Data D2"
-  ui[3]: "Camera Data D3"
-  ui[4]: "Camera Data D4"
-  ui[5]: "Camera Data D5"
-  ui[6]: "Camera Data D6"
-  ui[7]: "Camera Data D7"
-  uo[0]: "Status LED: Busy"
-  uo[1]: "Status LED: Ready"
-  uo[2]: "Status LED: Harvest"
-  uo[3]: "Status LED: Sensors OK"
-  uo[4]: "Status LED: FINAL"
-  uo[5]: "Status LED: Fault"
-  uo[6]: "Status LED: Activity"
-  uo[7]: "MAIN HARVEST ALERT"
-  uio[0]: "UART RX (IN)"
-  uio[1]: "Reserved"
-  uio[2]: "Reserved"
-  uio[3]: "Reserved"
-  uio[4]: "Reserved"
-  uio[5]: "Camera HREF (IN)"
-  uio[6]: "Camera VSYNC (IN)"
-  uio[7]: "Mode Select (IN)"
+  ui[0]: "Camera Bit 0"
+  ui[1]: "Camera Bit 1"
+  ui[2]: "Camera Bit 2"
+  ui[3]: "Camera Bit 3"
+  ui[4]: "Camera Bit 4"
+  ui[5]: "Camera Bit 5"
+  ui[6]: "Camera Bit 6"
+  ui[7]: "Camera Bit 7"
+  uo[0]: "LED Busy"
+  uo[1]: "LED Ready"
+  uo[2]: "LED Harvest"
+  uo[3]: "LED Sensors"
+  uo[4]: "LED Final"
+  uo[5]: "LED Fault"
+  uo[6]: "LED Activity"
+  uo[7]: "ALARM"
+  uio[0]: "UART RX"
+  uio[1]: "RSVD"
+  uio[2]: "RSVD"
+  uio[3]: "RSVD"
+  uio[4]: "RSVD"
+  uio[5]: "HREF"
+  uio[6]: "VSYNC"
+  uio[7]: "MODE"
 
 # Do not change!
 yaml_version: 6
