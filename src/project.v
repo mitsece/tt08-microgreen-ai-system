@@ -110,7 +110,8 @@ camera_interface cam_if (
     .cam_data(cam_data),
     .pixel_out(cnn_pixel),
     .pixel_valid(cnn_pixel_valid),
-    .frame_start(cnn_frame_start)
+    .frame_start(cnn_frame_start),
+    .frame_done()
 );
 
 // ============================================================
@@ -1827,7 +1828,7 @@ end
   // ============================================================
   always @(posedge clk) begin
     if (pixel_valid && pix_cnt < IMG_SIZE) begin
-      input_buffer[pix_cnt] <= pixel_in;
+      input_buffer[pix_cnt[9:0]] <= pixel_in;
     end
   end
 
@@ -1884,7 +1885,7 @@ end
           end
           
           // Correctly center pixels: (pixel - 128)
-          stage2_data <= $signed({1'b0, input_buffer[stage1_step[9:0]]}) - 16'd128;
+          stage2_data <= $signed({8'b0, input_buffer[stage1_step[9:0]]}) - 16'sd128;
           stage2_weight <= conv2d_w[stage1_wptr];
           
           stage3_valid <= stage2_valid;
