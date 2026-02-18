@@ -5,7 +5,6 @@
 // Changes: 3-Stage Pipeline, Modulo Removal, BRAM Inference
 // ============================================================
 
-`timescale 1ns / 1ps
 `default_nettype none
 
 module cnn_inference (
@@ -197,6 +196,7 @@ module cnn_inference (
   end
 
 endmodule
+
 
 
 
