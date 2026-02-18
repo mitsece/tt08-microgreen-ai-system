@@ -100,7 +100,7 @@ cnn_inference cnn (
 // ============================================================
 
 uart_rx #(
-    .CLKS_PER_BIT(434)  // 50MHz / 115200 = 434
+    .CLKS_PER_BIT(868)  // 100MHz / 115200 = 868
 ) uart_rx_inst (
     .clk(clk),
     .rst_n(rst_n),
@@ -114,7 +114,7 @@ uart_rx #(
 // ============================================ ================
 
 uart_tx #(
-    .CLKS_PER_BIT(434)
+    .CLKS_PER_BIT(868)
 ) uart_tx_inst (
     .clk(clk),
     .rst_n(rst_n),
@@ -198,7 +198,7 @@ always @(posedge clk or negedge rst_n) begin
     end else begin
         // CNN decision
         if (cnn_ready) begin
-            harvest_ready_cnn <= cnn_classification && (cnn_confidence > 8'd80);
+            harvest_ready_cnn <= cnn_classification && (cnn_confidence > 8'd40);
         end
         
         // Sensor-based decision
@@ -241,7 +241,7 @@ end
 // STATUS LED GENERATION
 // ============================================================
 
-reg [7:0] status_leds_reg;
+(* IOB = "true" *) reg [7:0] status_leds_reg;
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
