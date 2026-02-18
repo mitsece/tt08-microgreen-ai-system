@@ -1,5 +1,3 @@
----
-# Tiny Tapeout Project Configuration
 project:
   title: "Microgreen AI System"
   description: "Nano-CNN for harvest detection with sensor fusion"
@@ -13,7 +11,6 @@ project:
   source_files:
     - "project.v"
 
-# Pinout definition
 pinout:
   ui[0]: "Camera Bit 0"
   ui[1]: "Camera Bit 1"
@@ -39,7 +36,6 @@ pinout:
   uio[5]: "HREF"
   uio[6]: "VSYNC"
   uio[7]: "MODE"
-
 
 
 # Do not change!
