@@ -101,7 +101,8 @@ reg harvest_ready_final;
 // CAMERA INTERFACE
 // ============================================================
 
-camera_interface cam_if (
+  wire _unused_frame_done;
+  camera_interface cam_if (
     .clk(clk),
     .rst_n(rst_n),
     .cam_pclk(cam_pclk),
@@ -111,7 +112,7 @@ camera_interface cam_if (
     .pixel_out(cnn_pixel),
     .pixel_valid(cnn_pixel_valid),
     .frame_start(cnn_frame_start),
-    .frame_done()
+    .frame_done(_unused_frame_done)
 );
 
 // ============================================================
