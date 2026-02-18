@@ -27,7 +27,7 @@ localparam DATA = 2'd2;
 localparam STOP = 2'd3;
 
 reg [1:0] state;
-reg [8:0] clk_count;
+reg [11:0] clk_count;
 reg [2:0] bit_index;
 reg [7:0] rx_byte;
 
