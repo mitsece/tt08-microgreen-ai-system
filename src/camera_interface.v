@@ -5,7 +5,6 @@
 // Generates internal frame/line valid signals
 // ============================================================
 
-`timescale 1ns / 1ps
 `default_nettype none
 
 module camera_interface (
@@ -63,3 +62,4 @@ module camera_interface (
     end
 
 endmodule
+
