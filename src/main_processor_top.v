@@ -6,7 +6,6 @@
 // Co-Processor: Sensor monitoring and fault detection
 // ============================================================
 
-`timescale 1ns / 1ps
 `default_nettype none
 
 module main_processor_asic (
@@ -278,3 +277,4 @@ assign uart_tx_valid = uart_rx_valid;  // Echo back
 endmodule
 
 `default_nettype wire
+
