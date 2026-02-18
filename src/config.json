@@ -1,7 +1,7 @@
 {
   "DESIGN_NAME": "tt_um_precision_farming",
   "VERILOG_FILES": [
-    "dir::src/project.v"
+    "dir::project.v"
   ],
   "CLOCK_PERIOD": 20,
   "CLOCK_PORT": "clk",
@@ -20,6 +20,7 @@
   "LEFT_MARGIN_MULT": 6,
   "RIGHT_MARGIN_MULT": 6,
   "FP_SIZING": "absolute",
+  "FP_PDN_MULTILAYER": 0,
   "PL_BASIC_PLACEMENT": 0,
   "GRT_ALLOW_CONGESTION": 1,
   "FP_IO_HLENGTH": 2,
@@ -33,7 +34,6 @@
     "sky130_ef_sc_hd__decap_12"
   ],
   "RUN_CTS": 1,
-  "DESIGN_IS_CORE": 0,
   "RT_MAX_LAYER": "met4",
   "MAGIC_DEF_LABELS": 0,
   "MAGIC_WRITE_LEF_PINONLY": 1
