@@ -5,17 +5,9 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 COCOTB_RESULTS_FILE ?= results.xml
 
-# Include path for Verilog (crucial for `include "cnn_weights.v")
-COMPILE_ARGS += -I$(PWD)/../src
-
-# Verilog source files
+# Verilog source files - MONOLITHIC
 VERILOG_SOURCES = $(PWD)/tb.v \
-                  $(PWD)/../src/project.v \
-                  $(PWD)/../src/main_processor_top.v \
-                  $(PWD)/../src/cnn_inference.v \
-                  $(PWD)/../src/camera_interface.v \
-                  $(PWD)/../src/uart_rx.v \
-                  $(PWD)/../src/uart_tx.v
+                  $(PWD)/../src/project.v
 
 # Testbench module (test.py)
 MODULE = test
