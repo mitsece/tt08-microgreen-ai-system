@@ -5,7 +5,10 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 COCOTB_RESULTS_FILE ?= results.xml
 
-# Verilog source files (Order matters: weights included in inference)
+# Include path for Verilog (crucial for `include "cnn_weights.v")
+COMPILE_ARGS += -I$(PWD)/../src
+
+# Verilog source files
 VERILOG_SOURCES = $(PWD)/tb.v \
                   $(PWD)/../src/project.v \
                   $(PWD)/../src/main_processor_top.v \
