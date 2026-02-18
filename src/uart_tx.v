@@ -7,7 +7,6 @@
 // Parity: None
 // ============================================================
 
-`timescale 1ns / 1ps
 `default_nettype none
 
 module uart_tx #(
@@ -102,3 +101,4 @@ end
 endmodule
 
 `default_nettype wire
+
