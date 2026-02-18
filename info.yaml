@@ -6,7 +6,6 @@ project:
   description: "Microgreen Growth Monitor - 4 sensors + camera-based harvest detection for precision agriculture"
   picture: "docs/scheme.png"
   author: "User"
-  title: "Precision farming"
   license: "Apache-2.0"
   family: "tt09"
 
