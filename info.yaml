@@ -1,22 +1,17 @@
----
+--- 
 # Tiny Tapeout Project Configuration
 project:
-  title: "Microgreen AI System"
-  description: "Nano-CNN for harvest detection"
-  picture: "docs/scheme.png"
-  author: "User"
-  license: "Apache-2.0"
-  language: "Verilog"
-  clock_hz: 100000000
-  tiles: "2x2"
-  top_module: "tt_um_precision_farming"
+  title:        "Microgreen AI System"
+  description:  "Nano-CNN for harvest detection with sensor fusion"
+  picture:      "docs/scheme.png"
+  author:       "User"
+  license:      "Apache-2.0"
+  language:     "Verilog"
+  clock_hz:     100000000
+  tiles:        "2x2"
+  top_module:   "tt_um_precision_farming"
   source_files:
     - "project.v"
-    - "main_processor_top.v"
-    - "cnn_inference.v"
-    - "uart_rx.v"
-    - "uart_tx.v"
-    - "camera_interface.v"
 
 # Pinout definition
 pinout:
@@ -44,7 +39,6 @@ pinout:
   uio[5]: "HREF"
   uio[6]: "VSYNC"
   uio[7]: "MODE"
-
 
 # Do not change!
 yaml_version: 6
