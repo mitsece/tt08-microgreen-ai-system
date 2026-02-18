@@ -1,25 +1,31 @@
-# Tiny Tapeout project information
+--- 
+# Tiny Tapeout Project Configuration
+
 project:
-  title:        "precision"      # Project title
-  author:       "ece"      # Your name
-  discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "precision_farming"      # One line description of what your project does
-  language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     0       # Clock frequency in Hz (or 0 if not applicable)
+  name: "tt_um_precision_farming"
+  description: "Microgreen Growth Monitor - 4 sensors + camera-based harvest detection for precision agriculture"
+  picture: "docs/scheme.png"
+  author: "User"
+  license: "Apache-2.0"
+  family: "tt09"
 
-  # How many tiles your design occupies? A single tile is about 167x108 uM.
-  tiles: "2x2"          # Valid values: 1x1, 1x2, 2x2, 3x2, 4x2, 6x2 or 8x2
-
-  # Your top module name must start with "tt_um_". Make it unique by including your github username:
-  top_module:  "tt_um_precision_farming"
-
-  # List your project's source files here.
-  # Source files must be in ./src and you must list each source file separately, one per line.
-  # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
-  source_files:
+# Sources - Verified individual modules
+source:
+  files:
     - "project.v"
+    - "main_processor_top.v"
+    - "cnn_inference.v"
+    - "uart_rx.v"
+    - "uart_tx.v"
+    - "camera_interface.v"
+  top_module: "tt_um_precision_farming"
 
-# The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
+# GDS Settings - 2x2 tile for enhanced microgreen monitor
+tiles: "2x2"
+docs: 
+  doc: "docs/info.md"
+
+# Pinout definition
 pinout:
   ui[0]: "Camera Data D0"
   ui[1]: "Camera Data D1"
@@ -29,22 +35,22 @@ pinout:
   ui[5]: "Camera Data D5"
   ui[6]: "Camera Data D6"
   ui[7]: "Camera Data D7"
-  uo[0]: "Status Bit 0"
-  uo[1]: "Status Bit 1"
-  uo[2]: "Status Bit 2"
-  uo[3]: "Status Bit 3"
-  uo[4]: "Status Bit 4"
-  uo[5]: "Status Bit 5"
-  uo[6]: "Status Bit 6"
-  uo[7]: "Alert Output"
-  uio[0]: "Sensor Select 0"
-  uio[1]: "Sensor Select 1"
+  uo[0]: "Status LED: Busy"
+  uo[1]: "Status LED: Ready"
+  uo[2]: "Status LED: Harvest"
+  uo[3]: "Status LED: Sensors OK"
+  uo[4]: "Status LED: FINAL"
+  uo[5]: "Status LED: Fault"
+  uo[6]: "Status LED: Activity"
+  uo[7]: "MAIN HARVEST ALERT"
+  uio[0]: "UART RX (IN)"
+  uio[1]: "Reserved"
   uio[2]: "Reserved"
   uio[3]: "Reserved"
   uio[4]: "Reserved"
-  uio[5]: "Camera HREF"
-  uio[6]: "Camera VSYNC"
-  uio[7]: "Mode Select"
+  uio[5]: "Camera HREF (IN)"
+  uio[6]: "Camera VSYNC (IN)"
+  uio[7]: "Mode Select (IN)"
 
 # Do not change!
 yaml_version: 6
