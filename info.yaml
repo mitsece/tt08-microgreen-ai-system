@@ -6,7 +6,7 @@ project:
   license: "Apache-2.0"
   language: "Verilog"
   clock_hz: 100000000
-  tiles: "3x3"
+  tiles: "5x4"
   top_module: "tt_um_precision_farming"
   source_files:
     - "project.v"
