@@ -1,7 +1,7 @@
 project:
   title: "Microgreen AI System"
   description: "Nano-CNN for harvest detection with sensor fusion"
-  picture: "docs/scheme.png"
+  picture: ""
   author: "User"
   license: "Apache-2.0"
   language: "Verilog"
