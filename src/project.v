@@ -26,45 +26,27 @@ module tt_um_precision_farming (
   assign uo_out[7]   = harvest_alert;
   assign uio_out[0] = uart_tx;
   assign uio_out[7:1] = 7'b0;
-  assign uio_oe = 8'b00000001; 
+  assign uio_oe = 8'b00000001;
   wire _unused = &{alert_level, fault_detected, uio_in[4:1], uio_in[7], ena, 1'b0};
 endmodule
 
-// --- From src/main_processor_top.v ---
 // ============================================================
 // MAIN PROCESSOR ASIC - TOP LEVEL
 // ============================================================
-// Competition Project: Dual-ASIC Precision Farming System
-// Main Processor: CNN-based plant growth classification
-// Co-Processor: Sensor monitoring and fault detection
-// ============================================================
-
-
-
 
 module main_processor_asic (
-    input wire clk,              // System clock (50MHz)
-    input wire rst_n,            // Active-low reset
-    
-    // Camera interface (OV7670)
-    input wire cam_href,         // Horizontal reference
-    input wire cam_vsync,        // Vertical sync
-    input wire [7:0] cam_data,   // 8-bit pixel data
-    
-    // UART interface (from co-processor)
-    input wire uart_rx,          // UART receive from co-processor
-    output wire uart_tx,         // UART transmit to co-processor
-    
-    // Output interface
-    output wire harvest_alert,   // Harvest ready signal
-    output wire [2:0] alert_level, // Alert severity (0-7)
-    output wire [6:0] status_leds, // Status indicators
-    output wire fault_detected   // System fault flag
+    input wire clk,
+    input wire rst_n,
+    input wire cam_href,
+    input wire cam_vsync,
+    input wire [7:0] cam_data,
+    input wire uart_rx,
+    output wire uart_tx,
+    output wire harvest_alert,
+    output wire [2:0] alert_level,
+    output wire [6:0] status_leds,
+    output wire fault_detected
 );
-
-// ============================================================
-// INTERNAL SIGNALS
-// ============================================================
 
 // CNN signals
 wire [7:0] cnn_pixel;
@@ -80,6 +62,8 @@ wire [7:0] uart_rx_data;
 wire uart_rx_valid;
 wire [7:0] uart_tx_data;
 wire uart_tx_valid;
+wire _unused_tx_ready;
+wire _unused_frame_done;
 
 // Sensor data from co-processor
 reg [1:0] sensor_temp;
@@ -97,8 +81,7 @@ reg harvest_ready_final;
 // CAMERA INTERFACE
 // ============================================================
 
-  wire _unused_frame_done;
-  camera_interface cam_if (
+camera_interface cam_if (
     .clk(clk),
     .rst_n(rst_n),
     .cam_href(cam_href),
@@ -127,11 +110,11 @@ cnn_inference cnn (
 );
 
 // ============================================================
-// UART RECEIVER (from co-processor)
+// UART RECEIVER
 // ============================================================
 
 uart_rx #(
-    .CLKS_PER_BIT(868)  // 100MHz / 115200 = 868
+    .CLKS_PER_BIT(868)
 ) uart_rx_inst (
     .clk(clk),
     .rst_n(rst_n),
@@ -141,8 +124,8 @@ uart_rx #(
 );
 
 // ============================================================
-// UART TRANSMITTER (to co-processor)
-// ============================================ ================
+// UART TRANSMITTER
+// ============================================================
 
 uart_tx #(
     .CLKS_PER_BIT(868)
@@ -154,8 +137,6 @@ uart_tx #(
     .tx(uart_tx),
     .tx_ready(_unused_tx_ready)
 );
-
-wire _unused_tx_ready;
 
 // ============================================================
 // UART PACKET PARSER
@@ -172,49 +153,47 @@ always @(posedge clk or negedge rst_n) begin
         sensor_light <= 0;
         sensor_soil <= 0;
         fault_flags <= 0;
-        // actuator_status <= 0;
     end else if (uart_rx_valid) begin
         case (rx_byte_count)
-            3'd0: begin  // Header
+            3'd0: begin
                 if (uart_rx_data == 8'hAA) begin
                     rx_byte_count <= rx_byte_count + 1;
                     rx_checksum <= 0;
                 end
             end
-            3'd1: begin  // Temperature
+            3'd1: begin
                 sensor_temp <= uart_rx_data[1:0];
                 rx_checksum <= rx_checksum + uart_rx_data;
                 rx_byte_count <= rx_byte_count + 1;
             end
-            3'd2: begin  // Humidity
+            3'd2: begin
                 sensor_humidity <= uart_rx_data[1:0];
                 rx_checksum <= rx_checksum + uart_rx_data;
                 rx_byte_count <= rx_byte_count + 1;
             end
-            3'd3: begin  // Light
+            3'd3: begin
                 sensor_light <= uart_rx_data[1:0];
                 rx_checksum <= rx_checksum + uart_rx_data;
                 rx_byte_count <= rx_byte_count + 1;
             end
-            3'd4: begin  // Soil moisture
+            3'd4: begin
                 sensor_soil <= uart_rx_data[1:0];
                 rx_checksum <= rx_checksum + uart_rx_data;
                 rx_byte_count <= rx_byte_count + 1;
             end
-            3'd5: begin  // Fault flags
+            3'd5: begin
                 fault_flags <= uart_rx_data;
                 rx_checksum <= rx_checksum + uart_rx_data;
                 rx_byte_count <= rx_byte_count + 1;
             end
-            3'd6: begin  // Actuator status
-                // actuator_status <= uart_rx_data; // Unused
+            3'd6: begin
                 rx_checksum <= rx_checksum + uart_rx_data;
                 rx_byte_count <= rx_byte_count + 1;
             end
-            3'd7: begin  // Checksum
-                // Verify checksum
+            3'd7: begin
                 rx_byte_count <= 0;
             end
+            default: rx_byte_count <= 0;
         endcase
     end
 end
@@ -229,19 +208,13 @@ always @(posedge clk or negedge rst_n) begin
         harvest_ready_sensors <= 0;
         harvest_ready_final <= 0;
     end else begin
-        // CNN decision
         if (cnn_ready) begin
             harvest_ready_cnn <= cnn_classification && (cnn_confidence > 8'd40);
         end
-        
-        // Sensor-based decision
-        // Optimal conditions: temp=2, humidity=2, light=2, soil=2
-        harvest_ready_sensors <= (sensor_temp == 2'd2) && 
+        harvest_ready_sensors <= (sensor_temp == 2'd2) &&
                                  (sensor_humidity == 2'd2) &&
                                  (sensor_light == 2'd2) &&
                                  (sensor_soil == 2'd2);
-        
-        // Final decision: Both CNN and sensors agree
         harvest_ready_final <= harvest_ready_cnn && harvest_ready_sensors;
     end
 end
@@ -257,15 +230,15 @@ always @(posedge clk or negedge rst_n) begin
         alert_level_reg <= 0;
     end else begin
         if (fault_flags != 0) begin
-            alert_level_reg <= 3'd7;  // Critical fault
+            alert_level_reg <= 3'd7;
         end else if (harvest_ready_final) begin
-            alert_level_reg <= 3'd6;  // Harvest ready
+            alert_level_reg <= 3'd6;
         end else if (harvest_ready_cnn) begin
-            alert_level_reg <= 3'd4;  // CNN suggests harvest
+            alert_level_reg <= 3'd4;
         end else if (!harvest_ready_sensors) begin
-            alert_level_reg <= 3'd2;  // Suboptimal conditions
+            alert_level_reg <= 3'd2;
         end else begin
-            alert_level_reg <= 3'd0;  // Normal
+            alert_level_reg <= 3'd0;
         end
     end
 end
@@ -274,19 +247,19 @@ end
 // STATUS LED GENERATION
 // ============================================================
 
-(* IOB = "true" *) reg [6:0] status_leds_reg;
+reg [6:0] status_leds_reg;
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         status_leds_reg <= 0;
     end else begin
-        status_leds_reg[0] <= cnn_busy;              // CNN processing
-        status_leds_reg[1] <= cnn_ready;             // CNN result ready
-        status_leds_reg[2] <= harvest_ready_cnn;     // CNN: harvest
-        status_leds_reg[3] <= harvest_ready_sensors; // Sensors: optimal
-        status_leds_reg[4] <= harvest_ready_final;   // Final: harvest!
-        status_leds_reg[5] <= |fault_flags;          // Any fault
-        status_leds_reg[6] <= uart_rx_valid;         // UART activity
+        status_leds_reg[0] <= cnn_busy;
+        status_leds_reg[1] <= cnn_ready;
+        status_leds_reg[2] <= harvest_ready_cnn;
+        status_leds_reg[3] <= harvest_ready_sensors;
+        status_leds_reg[4] <= harvest_ready_final;
+        status_leds_reg[5] <= |fault_flags;
+        status_leds_reg[6] <= uart_rx_valid;
     end
 end
 
@@ -299,29 +272,17 @@ assign alert_level = alert_level_reg;
 assign status_leds = status_leds_reg;
 assign fault_detected = |fault_flags;
 
-// ============================================================
-// UART TX (Send commands to co-processor)
-// ============================================================
+assign uart_tx_data = 8'h55;
+assign uart_tx_valid = uart_rx_valid;
 
-// For now, just send acknowledgment
-assign uart_tx_data = 8'h55;  // ACK
-assign uart_tx_valid = uart_rx_valid;  // Echo back
+// Unused signal suppression
+wire _unused_main = &{rx_checksum, cnn_confidence, 1'b0};
 
 endmodule
 
-`default_nettype wire
-
-
-// --- From src/cnn_inference.v ---
 // ============================================================
-// ULTRA-TINY CNN INFERENCE ENGINE (PIPELINED V2)
+// CNN INFERENCE ENGINE
 // ============================================================
-// Model: Nano-CNN Optimized for 100MHz+ ASIC/FPGA
-// Changes: 3-Stage Pipeline, Modulo Removal, BRAM Inference
-// ============================================================
-
-
-
 
 module cnn_inference (
     input wire clk,
@@ -335,14 +296,7 @@ module cnn_inference (
     output reg busy
 );
 
-// ============================================================
-// STREAMING CNN � No input_buffer, No feature_buffer
-// 8 conv filters, weights applied to each pixel as it arrives
-// No frame buffer needed � processes pixels on-the-fly
-// ============================================================
-
-// Conv weights: 8 filters x 8 weights = 64 total (3-bit filter + 3-bit phase indexing)
-reg signed [7:0] conv2d_w [0:63];  // 8 filters x 8 weights = 64
+reg signed [7:0] conv2d_w [0:63];
 initial begin
     conv2d_w[0]=-8'd17; conv2d_w[1]=8'd35;  conv2d_w[2]=-8'd39; conv2d_w[3]=8'd17;
     conv2d_w[4]=-8'd13; conv2d_w[5]=8'd39;  conv2d_w[6]=-8'd11; conv2d_w[7]=8'd9;
@@ -362,30 +316,27 @@ initial begin
     conv2d_w[60]=-8'd54;conv2d_w[61]=8'd20; conv2d_w[62]=8'd18; conv2d_w[63]=-8'd87;
 end
 
-// Conv biases
 reg signed [7:0] conv2d_b [0:7];
 initial begin
     conv2d_b[0]=-8'd81; conv2d_b[1]=-8'd39; conv2d_b[2]=-8'd47; conv2d_b[3]=-8'd127;
     conv2d_b[4]=-8'd25; conv2d_b[5]=-8'd111;conv2d_b[6]=-8'd54; conv2d_b[7]=-8'd81;
 end
 
-// 8 filter accumulators (24-bit signed)
 reg signed [23:0] acc0, acc1, acc2, acc3, acc4, acc5, acc6, acc7;
 reg [10:0] pix_cnt;
-reg [3:0]  w_phase;   // cycles 0-8 for 3x3 kernel position
+reg [3:0]  w_phase;
 reg        frame_done_flag;
 
-// Weight index = filter*8 + phase ({filter[2:0], phase[2:0]} = 6-bit exact)
-wire [5:0] widx0 = {3'd0, w_phase[2:0]};  // filter 0: weights 0-7
-wire [5:0] widx1 = {3'd1, w_phase[2:0]};  // filter 1: weights 8-15
-wire [5:0] widx2 = {3'd2, w_phase[2:0]};  // filter 2: weights 16-23
-wire [5:0] widx3 = {3'd3, w_phase[2:0]};  // filter 3: weights 24-31
-wire [5:0] widx4 = {3'd4, w_phase[2:0]};  // filter 4: weights 32-39
-wire [5:0] widx5 = {3'd5, w_phase[2:0]};  // filter 5: weights 40-47
-wire [5:0] widx6 = {3'd6, w_phase[2:0]};  // filter 6: weights 48-55
-wire [5:0] widx7 = {3'd7, w_phase[2:0]};  // filter 7: weights 56-63
+wire [5:0] widx0 = {3'd0, w_phase[2:0]};
+wire [5:0] widx1 = {3'd1, w_phase[2:0]};
+wire [5:0] widx2 = {3'd2, w_phase[2:0]};
+wire [5:0] widx3 = {3'd3, w_phase[2:0]};
+wire [5:0] widx4 = {3'd4, w_phase[2:0]};
+wire [5:0] widx5 = {3'd5, w_phase[2:0]};
+wire [5:0] widx6 = {3'd6, w_phase[2:0]};
+wire [5:0] widx7 = {3'd7, w_phase[2:0]};
 
-wire signed [8:0]  px_c = $signed({1'b0, pixel_in}) - 9'sd128;
+wire signed [8:0] px_c = $signed({1'b0, pixel_in}) - 9'sd128;
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -406,7 +357,6 @@ always @(posedge clk or negedge rst_n) begin
             acc6<={{16{conv2d_b[6][7]}},conv2d_b[6]};
             acc7<={{16{conv2d_b[7][7]}},conv2d_b[7]};
         end else if (pixel_valid && !frame_done_flag) begin
-            // Streaming MAC: one pixel multiplied by 8 filter weights simultaneously
             acc0 <= acc0 + px_c * conv2d_w[widx0];
             acc1 <= acc1 + px_c * conv2d_w[widx1];
             acc2 <= acc2 + px_c * conv2d_w[widx2];
@@ -415,11 +365,9 @@ always @(posedge clk or negedge rst_n) begin
             acc5 <= acc5 + px_c * conv2d_w[widx5];
             acc6 <= acc6 + px_c * conv2d_w[widx6];
             acc7 <= acc7 + px_c * conv2d_w[widx7];
-            // Cycle kernel phase and count pixels
             w_phase <= (w_phase == 7) ? 0 : w_phase + 1;
             pix_cnt <= pix_cnt + 1;
         end else if (pix_cnt >= 11'd512 && !frame_done_flag && !frame_start) begin
-            // End of frame: majority vote across 8 filter outputs
             frame_done_flag <= 1;
             busy  <= 0;
             ready <= 1;
@@ -436,43 +384,24 @@ end
 
 endmodule
 
-
-
-
-
-// --- From src/camera_interface.v ---
 // ============================================================
 // CAMERA INTERFACE MODULE
 // ============================================================
-// Captures 8-bit grayscale data from camera
-// Generates internal frame/line valid signals
-// ============================================================
-
-
-
 
 module camera_interface (
     input wire clk,
     input wire rst_n,
-    
-    // External Camera Signals
     input wire cam_vsync,
     input wire cam_href,
     input wire [7:0] cam_data,
-    
-    // Internal Interface
     output reg [7:0] pixel_out,
     output reg pixel_valid,
     output reg frame_start,
     output reg frame_done
 );
 
-    // Synchronize camera signals to system clock
-    // (Simplified synchronization for simulation)
-    // In real hardware, we'd use proper 2-stage synchronizers or FIFO
-    
     reg vsync_d;
-    
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pixel_out <= 0;
@@ -481,18 +410,9 @@ module camera_interface (
             frame_done <= 0;
             vsync_d <= 0;
         end else begin
-            // Edge detection for VSYNC
             vsync_d <= cam_vsync;
-            
-            // Frame Start (Rising edge of VSYNC for active high, or based on protocol)
-            // Typically VSYNC inactive->active means start of frame
             frame_start <= (cam_vsync && !vsync_d);
-            
-            // Frame Done (Falling edge of VSYNC)
             frame_done <= (!cam_vsync && vsync_d);
-            
-            // Capture data when HREF is high (valid line)
-            // We sample on system clock, assuming pclk is slower or synchronized
             if (cam_href) begin
                 pixel_out <= cam_data;
                 pixel_valid <= 1;
@@ -504,22 +424,12 @@ module camera_interface (
 
 endmodule
 
-
-// --- From src/uart_rx.v ---
 // ============================================================
 // UART RECEIVER MODULE
 // ============================================================
-// Baud rate: 115200
-// Data bits: 8
-// Stop bits: 1
-// Parity: None
-// ============================================================
-
-
-
 
 module uart_rx #(
-    parameter CLKS_PER_BIT = 434  // 50MHz / 115200 = 434
+    parameter CLKS_PER_BIT = 434
 )(
     input wire clk,
     input wire rst_n,
@@ -528,19 +438,17 @@ module uart_rx #(
     output reg rx_valid
 );
 
-// State machine
-localparam IDLE = 2'd0;
+localparam IDLE  = 2'd0;
 localparam START = 2'd1;
-localparam DATA = 2'd2;
-localparam STOP = 2'd3;
+localparam DATA  = 2'd2;
+localparam STOP  = 2'd3;
 
 reg [1:0] state;
 reg [11:0] clk_count;
 reg [2:0] bit_index;
 reg [7:0] rx_byte;
-
-// Synchronize RX input
 reg rx_sync1, rx_sync2;
+
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         rx_sync1 <= 1'b1;
@@ -551,7 +459,6 @@ always @(posedge clk or negedge rst_n) begin
     end
 end
 
-// UART RX state machine
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state <= IDLE;
@@ -561,35 +468,33 @@ always @(posedge clk or negedge rst_n) begin
         rx_valid <= 0;
         rx_byte <= 0;
     end else begin
-        rx_valid <= 0;  // Pulse, not level
-        
+        rx_valid <= 0;
+
         case (state)
             IDLE: begin
                 clk_count <= 0;
                 bit_index <= 0;
-                if (rx_sync2 == 1'b0) begin  // Start bit detected
+                if (rx_sync2 == 1'b0)
                     state <= START;
-                end
             end
-            
+
             START: begin
                 if (clk_count == (CLKS_PER_BIT - 1) / 2) begin
-                    if (rx_sync2 == 1'b0) begin  // Verify start bit
+                    if (rx_sync2 == 1'b0) begin
                         clk_count <= 0;
                         state <= DATA;
                     end else begin
-                        state <= IDLE;  // False start
+                        state <= IDLE;
                     end
                 end else begin
                     clk_count <= clk_count + 1;
                 end
             end
-            
+
             DATA: begin
                 if (clk_count == CLKS_PER_BIT - 1) begin
                     clk_count <= 0;
                     rx_byte[bit_index] <= rx_sync2;
-                    
                     if (bit_index == 7) begin
                         bit_index <= 0;
                         state <= STOP;
@@ -600,11 +505,11 @@ always @(posedge clk or negedge rst_n) begin
                     clk_count <= clk_count + 1;
                 end
             end
-            
+
             STOP: begin
                 if (clk_count == CLKS_PER_BIT - 1) begin
                     clk_count <= 0;
-                    if (rx_sync2 == 1'b1) begin  // Valid stop bit
+                    if (rx_sync2 == 1'b1) begin
                         rx_data <= rx_byte;
                         rx_valid <= 1'b1;
                     end
@@ -613,7 +518,7 @@ always @(posedge clk or negedge rst_n) begin
                     clk_count <= clk_count + 1;
                 end
             end
-            
+
             default: state <= IDLE;
         endcase
     end
@@ -621,24 +526,12 @@ end
 
 endmodule
 
-`default_nettype wire
-
-
-// --- From src/uart_tx.v ---
 // ============================================================
 // UART TRANSMITTER MODULE
 // ============================================================
-// Baud rate: 115200
-// Data bits: 8
-// Stop bits: 1
-// Parity: None
-// ============================================================
-
-
-
 
 module uart_tx #(
-    parameter CLKS_PER_BIT = 434  // 50MHz / 115200 = 434
+    parameter CLKS_PER_BIT = 434
 )(
     input wire clk,
     input wire rst_n,
@@ -648,11 +541,10 @@ module uart_tx #(
     output wire tx_ready
 );
 
-// State machine
-localparam IDLE = 2'd0;
+localparam IDLE  = 2'd0;
 localparam START = 2'd1;
-localparam DATA = 2'd2;
-localparam STOP = 2'd3;
+localparam DATA  = 2'd2;
+localparam STOP  = 2'd3;
 
 reg [1:0] state;
 reg [11:0] clk_count;
@@ -661,30 +553,27 @@ reg [7:0] tx_byte;
 
 assign tx_ready = (state == IDLE);
 
-// UART TX state machine
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
         state <= IDLE;
         clk_count <= 0;
         bit_index <= 0;
-        tx <= 1'b1;  // Idle high
+        tx <= 1'b1;
         tx_byte <= 0;
     end else begin
         case (state)
             IDLE: begin
-                tx <= 1'b1;  // Idle high
+                tx <= 1'b1;
                 clk_count <= 0;
                 bit_index <= 0;
-                
                 if (tx_valid) begin
                     tx_byte <= tx_data;
                     state <= START;
                 end
             end
-            
+
             START: begin
-                tx <= 1'b0;  // Start bit (low)
-                
+                tx <= 1'b0;
                 if (clk_count == CLKS_PER_BIT - 1) begin
                     clk_count <= 0;
                     state <= DATA;
@@ -692,13 +581,11 @@ always @(posedge clk or negedge rst_n) begin
                     clk_count <= clk_count + 1;
                 end
             end
-            
+
             DATA: begin
                 tx <= tx_byte[bit_index];
-                
                 if (clk_count == CLKS_PER_BIT - 1) begin
                     clk_count <= 0;
-                    
                     if (bit_index == 7) begin
                         bit_index <= 0;
                         state <= STOP;
@@ -709,10 +596,9 @@ always @(posedge clk or negedge rst_n) begin
                     clk_count <= clk_count + 1;
                 end
             end
-            
+
             STOP: begin
-                tx <= 1'b1;  // Stop bit (high)
-                
+                tx <= 1'b1;
                 if (clk_count == CLKS_PER_BIT - 1) begin
                     clk_count <= 0;
                     state <= IDLE;
@@ -720,7 +606,7 @@ always @(posedge clk or negedge rst_n) begin
                     clk_count <= clk_count + 1;
                 end
             end
-            
+
             default: state <= IDLE;
         endcase
     end
@@ -729,4 +615,3 @@ end
 endmodule
 
 `default_nettype wire
-
