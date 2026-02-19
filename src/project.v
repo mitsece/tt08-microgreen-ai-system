@@ -1,6 +1,5 @@
 // MONOLITHIC PROJECT FILE - CLEANED FOR ASIC SYNTHESIS
 `default_nettype none
-
 module tt_um_precision_farming (
     input  wire [7:0] ui_in,
     output wire [7:0] uo_out,
@@ -326,427 +325,115 @@ endmodule
 module cnn_inference (
     input wire clk,
     input wire rst_n,
-    
-    // Image input interface
     input wire [7:0] pixel_in,
     input wire pixel_valid,
     input wire frame_start,
-    
-    // Output interface
     output reg classification,
     output reg [7:0] confidence,
     output reg ready,
     output reg busy
 );
 
-  // ============================================================
-  // PARAMETERS & WEIGHTS
-  // ============================================================
-  localparam IMG_SIZE = 1024;
-  
-  // Weights (Vivado will try to infer BRAM if possible)
-  // Ultra-Tiny CNN Weights for 2x2 ASIC
-// Generated automatically
-// Model: ultra_tiny_cnn
-// 8-bit fixed point
+// ============================================================
+// STREAMING CNN � No input_buffer, No feature_buffer
+// 8 conv filters, weights applied to each pixel as it arrives
+// No frame buffer needed � processes pixels on-the-fly
+// ============================================================
 
-// Layer: conv2d
-(* ram_style = "block" *) reg signed [7:0] conv2d_w [0:71];
+// Conv weights: 8 filters x 9 weights = 72 total
+reg signed [7:0] conv2d_w [0:71];
 initial begin
-    conv2d_w[0] = 8'd14;
-    conv2d_w[1] = 8'd53;
-    conv2d_w[2] = -8'd27;
-    conv2d_w[3] = 8'd16;
-    conv2d_w[4] = -8'd78;
-    conv2d_w[5] = 8'd70;
-    conv2d_w[6] = -8'd41;
-    conv2d_w[7] = 8'd127;
-    conv2d_w[8] = -8'd84;
-    conv2d_w[9] = 8'd22;
-    conv2d_w[10] = -8'd47;
-    conv2d_w[11] = 8'd68;
-    conv2d_w[12] = 8'd27;
-    conv2d_w[13] = -8'd102;
-    conv2d_w[14] = -8'd29;
-    conv2d_w[15] = 8'd111;
-    conv2d_w[16] = 8'd14;
-    conv2d_w[17] = -8'd93;
-    conv2d_w[18] = 8'd92;
-    conv2d_w[19] = 8'd29;
-    conv2d_w[20] = -8'd40;
-    conv2d_w[21] = -8'd10;
-    conv2d_w[22] = -8'd42;
-    conv2d_w[23] = -8'd47;
-    conv2d_w[24] = 8'd48;
-    conv2d_w[25] = -8'd5;
-    conv2d_w[26] = -8'd72;
-    conv2d_w[27] = -8'd49;
-    conv2d_w[28] = 8'd80;
-    conv2d_w[29] = -8'd15;
-    conv2d_w[30] = -8'd37;
-    conv2d_w[31] = 8'd59;
-    conv2d_w[32] = -8'd29;
-    conv2d_w[33] = 8'd66;
-    conv2d_w[34] = -8'd61;
-    conv2d_w[35] = 8'd78;
-    conv2d_w[36] = -8'd54;
-    conv2d_w[37] = 8'd20;
-    conv2d_w[38] = 8'd18;
-    conv2d_w[39] = -8'd87;
-    conv2d_w[40] = -8'd28;
-    conv2d_w[41] = 8'd59;
-    conv2d_w[42] = 8'd39;
-    conv2d_w[43] = -8'd51;
-    conv2d_w[44] = 8'd41;
-    conv2d_w[45] = -8'd70;
-    conv2d_w[46] = 8'd111;
-    conv2d_w[47] = -8'd2;
-    conv2d_w[48] = -8'd51;
-    conv2d_w[49] = 8'd2;
-    conv2d_w[50] = 8'd38;
-    conv2d_w[51] = -8'd112;
-    conv2d_w[52] = 8'd70;
-    conv2d_w[53] = 8'd90;
-    conv2d_w[54] = 8'd83;
-    conv2d_w[55] = -8'd66;
-    conv2d_w[56] = 8'd14;
-    conv2d_w[57] = 8'd94;
-    conv2d_w[58] = 8'd36;
-    conv2d_w[59] = -8'd94;
-    conv2d_w[60] = -8'd43;
-    conv2d_w[61] = -8'd28;
-    conv2d_w[62] = -8'd45;
-    conv2d_w[63] = 8'd93;
-    conv2d_w[64] = -8'd22;
-    conv2d_w[65] = -8'd4;
-    conv2d_w[66] = 8'd98;
-    conv2d_w[67] = 8'd75;
-    conv2d_w[68] = 8'd37;
-    conv2d_w[69] = 8'd50;
-    conv2d_w[70] = 8'd107;
-    conv2d_w[71] = -8'd75;
+    conv2d_w[0]=-8'd17; conv2d_w[1]=8'd35;  conv2d_w[2]=-8'd39; conv2d_w[3]=8'd17;
+    conv2d_w[4]=-8'd13; conv2d_w[5]=8'd39;  conv2d_w[6]=-8'd11; conv2d_w[7]=8'd9;
+    conv2d_w[8]=8'd1;   conv2d_w[9]=8'd9;   conv2d_w[10]=8'd18; conv2d_w[11]=8'd2;
+    conv2d_w[12]=8'd54; conv2d_w[13]=-8'd35;conv2d_w[14]=8'd8;  conv2d_w[15]=-8'd86;
+    conv2d_w[16]=8'd10; conv2d_w[17]=8'd4;  conv2d_w[18]=-8'd6; conv2d_w[19]=8'd22;
+    conv2d_w[20]=8'd0;  conv2d_w[21]=8'd7;  conv2d_w[22]=8'd3;  conv2d_w[23]=8'd5;
+    conv2d_w[24]=8'd14; conv2d_w[25]=8'd53; conv2d_w[26]=-8'd27;conv2d_w[27]=8'd16;
+    conv2d_w[28]=-8'd78;conv2d_w[29]=8'd70; conv2d_w[30]=-8'd41;conv2d_w[31]=8'd127;
+    conv2d_w[32]=-8'd84;conv2d_w[33]=8'd22; conv2d_w[34]=-8'd47;conv2d_w[35]=8'd68;
+    conv2d_w[36]=8'd27; conv2d_w[37]=-8'd102;conv2d_w[38]=-8'd29;conv2d_w[39]=8'd111;
+    conv2d_w[40]=8'd14; conv2d_w[41]=-8'd93;conv2d_w[42]=8'd92; conv2d_w[43]=8'd29;
+    conv2d_w[44]=-8'd40;conv2d_w[45]=-8'd10;conv2d_w[46]=-8'd42;conv2d_w[47]=-8'd47;
+    conv2d_w[48]=8'd48; conv2d_w[49]=-8'd5; conv2d_w[50]=-8'd72;conv2d_w[51]=-8'd49;
+    conv2d_w[52]=8'd80; conv2d_w[53]=-8'd15;conv2d_w[54]=-8'd37;conv2d_w[55]=8'd59;
+    conv2d_w[56]=-8'd29;conv2d_w[57]=8'd66; conv2d_w[58]=-8'd61;conv2d_w[59]=8'd78;
+    conv2d_w[60]=-8'd54;conv2d_w[61]=8'd20; conv2d_w[62]=8'd18; conv2d_w[63]=-8'd87;
+    conv2d_w[64]=-8'd28;conv2d_w[65]=8'd59; conv2d_w[66]=8'd39; conv2d_w[67]=-8'd51;
+    conv2d_w[68]=8'd41; conv2d_w[69]=-8'd70;conv2d_w[70]=8'd111;conv2d_w[71]=-8'd2;
 end
 
+// Conv biases
 reg signed [7:0] conv2d_b [0:7];
 initial begin
-    conv2d_b[0] = -8'd81;
-    conv2d_b[1] = -8'd39;
-    conv2d_b[2] = -8'd47;
-    conv2d_b[3] = -8'd127;
-    conv2d_b[4] = -8'd25;
-    conv2d_b[5] = -8'd111;
-    conv2d_b[6] = -8'd54;
-    conv2d_b[7] = -8'd81;
-end
-// Layer: dense
-(* ram_style = "block" *) reg signed [7:0] dense_w [0:127];
-initial begin
-    dense_w[0] = 8'd26;
-    dense_w[1] = 8'd61;
-    dense_w[2] = -8'd35;
-    dense_w[3] = -8'd76;
-    dense_w[4] = -8'd34;
-    dense_w[5] = -8'd83;
-    dense_w[6] = 8'd26;
-    dense_w[7] = -8'd21;
-    dense_w[8] = -8'd63;
-    dense_w[9] = 8'd112;
-    dense_w[10] = 8'd25;
-    dense_w[11] = 8'd28;
-    dense_w[12] = 8'd117;
-    dense_w[13] = 8'd58;
-    dense_w[14] = -8'd17;
-    dense_w[15] = -8'd82;
-    dense_w[16] = -8'd42;
-    dense_w[17] = 8'd118;
-    dense_w[18] = -8'd13;
-    dense_w[19] = -8'd4;
-    dense_w[20] = 8'd25;
-    dense_w[21] = 8'd7;
-    dense_w[22] = 8'd62;
-    dense_w[23] = -8'd55;
-    dense_w[24] = 8'd95;
-    dense_w[25] = 8'd39;
-    dense_w[26] = 8'd111;
-    dense_w[27] = -8'd23;
-    dense_w[28] = -8'd100;
-    dense_w[29] = -8'd99;
-    dense_w[30] = -8'd94;
-    dense_w[31] = -8'd53;
-    dense_w[32] = 8'd101;
-    dense_w[33] = -8'd60;
-    dense_w[34] = 8'd108;
-    dense_w[35] = 8'd92;
-    dense_w[36] = -8'd110;
-    dense_w[37] = 8'd28;
-    dense_w[38] = 8'd47;
-    dense_w[39] = 8'd6;
-    dense_w[40] = 8'd127;
-    dense_w[41] = 8'd10;
-    dense_w[42] = -8'd16;
-    dense_w[43] = 8'd106;
-    dense_w[44] = 8'd30;
-    dense_w[45] = -8'd55;
-    dense_w[46] = 8'd23;
-    dense_w[47] = 8'd79;
-    dense_w[48] = 8'd67;
-    dense_w[49] = -8'd15;
-    dense_w[50] = 8'd56;
-    dense_w[51] = 8'd38;
-    dense_w[52] = -8'd20;
-    dense_w[53] = -8'd2;
-    dense_w[54] = -8'd16;
-    dense_w[55] = 8'd75;
-    dense_w[56] = -8'd4;
-    dense_w[57] = 8'd17;
-    dense_w[58] = 8'd110;
-    dense_w[59] = 8'd99;
-    dense_w[60] = -8'd54;
-    dense_w[61] = -8'd67;
-    dense_w[62] = -8'd96;
-    dense_w[63] = 8'd82;
-    dense_w[64] = -8'd57;
-    dense_w[65] = 8'd54;
-    dense_w[66] = 8'd87;
-    dense_w[67] = 8'd35;
-    dense_w[68] = 8'd39;
-    dense_w[69] = 8'd0;
-    dense_w[70] = 8'd16;
-    dense_w[71] = 8'd62;
-    dense_w[72] = -8'd12;
-    dense_w[73] = 8'd98;
-    dense_w[74] = -8'd85;
-    dense_w[75] = 8'd34;
-    dense_w[76] = 8'd59;
-    dense_w[77] = 8'd87;
-    dense_w[78] = 8'd123;
-    dense_w[79] = -8'd7;
-    dense_w[80] = 8'd46;
-    dense_w[81] = -8'd66;
-    dense_w[82] = 8'd113;
-    dense_w[83] = 8'd113;
-    dense_w[84] = 8'd54;
-    dense_w[85] = 8'd63;
-    dense_w[86] = 8'd4;
-    dense_w[87] = 8'd103;
-    dense_w[88] = 8'd86;
-    dense_w[89] = -8'd10;
-    dense_w[90] = 8'd10;
-    dense_w[91] = 8'd66;
-    dense_w[92] = -8'd66;
-    dense_w[93] = -8'd73;
-    dense_w[94] = -8'd111;
-    dense_w[95] = -8'd50;
-    dense_w[96] = 8'd94;
-    dense_w[97] = -8'd34;
-    dense_w[98] = 8'd100;
-    dense_w[99] = 8'd12;
-    dense_w[100] = 8'd39;
-    dense_w[101] = 8'd63;
-    dense_w[102] = 8'd37;
-    dense_w[103] = 8'd65;
-    dense_w[104] = 8'd107;
-    dense_w[105] = 8'd5;
-    dense_w[106] = -8'd9;
-    dense_w[107] = 8'd109;
-    dense_w[108] = -8'd36;
-    dense_w[109] = -8'd39;
-    dense_w[110] = 8'd45;
-    dense_w[111] = 8'd87;
-    dense_w[112] = -8'd24;
-    dense_w[113] = -8'd106;
-    dense_w[114] = 8'd111;
-    dense_w[115] = 8'd72;
-    dense_w[116] = 8'd33;
-    dense_w[117] = -8'd12;
-    dense_w[118] = -8'd90;
-    dense_w[119] = 8'd11;
-    dense_w[120] = -8'd42;
-    dense_w[121] = 8'd105;
-    dense_w[122] = 8'd0;
-    dense_w[123] = -8'd122;
-    dense_w[124] = 8'd70;
-    dense_w[125] = -8'd5;
-    dense_w[126] = 8'd109;
-    dense_w[127] = -8'd64;
+    conv2d_b[0]=-8'd81; conv2d_b[1]=-8'd39; conv2d_b[2]=-8'd47; conv2d_b[3]=-8'd127;
+    conv2d_b[4]=-8'd25; conv2d_b[5]=-8'd111;conv2d_b[6]=-8'd54; conv2d_b[7]=-8'd81;
 end
 
-reg signed [7:0] dense_b [0:7];
-initial begin
-    dense_b[0] = -8'd42;
-    dense_b[1] = 8'd94;
-    dense_b[2] = -8'd58;
-    dense_b[3] = -8'd73;
-    dense_b[4] = 8'd127;
-    dense_b[5] = 8'd106;
-    dense_b[6] = 8'd99;
-    dense_b[7] = -8'd55;
-end
+// 8 filter accumulators (24-bit signed)
+reg signed [23:0] acc0, acc1, acc2, acc3, acc4, acc5, acc6, acc7;
+reg [10:0] pix_cnt;
+reg [3:0]  w_phase;   // cycles 0-8 for 3x3 kernel position
+reg        frame_done_flag;
 
+// Weight index = filter*9 + phase
+wire [6:0] widx0 = {3'd0, w_phase[2:0]};  // filter 0: weights 0-8
+wire [6:0] widx1 = {3'd1, w_phase[2:0]};  // filter 1: weights 9-17
+wire [6:0] widx2 = {3'd2, w_phase[2:0]};  // filter 2: weights 18-26
+wire [6:0] widx3 = {3'd3, w_phase[2:0]};  // filter 3: weights 27-35
+wire [6:0] widx4 = {3'd4, w_phase[2:0]};  // filter 4: weights 36-44
+wire [6:0] widx5 = {3'd5, w_phase[2:0]};  // filter 5: weights 45-53
+wire [6:0] widx6 = {3'd6, w_phase[2:0]};  // filter 6: weights 54-62
+wire [6:0] widx7 = {3'd7, w_phase[2:0]};  // filter 7: weights 63-71
 
+wire signed [8:0]  px_c = $signed({1'b0, pixel_in}) - 9'sd128;
 
-  // ============================================================
-  // PIPELINE REGISTERS
-  // ============================================================
-  reg [15:0] stage1_step;
-  reg [6:0]  stage1_wptr;
-  
-  reg signed [15:0] stage2_data;   
-  reg signed [7:0]  stage2_weight;
-  reg stage2_valid;
-  
-  reg signed [23:0] stage3_prod;   
-  reg stage3_valid;
-
-  // ============================================================
-  // FSM & CONTROL
-  // ============================================================
-  localparam IDLE       = 0;
-  localparam CONV1      = 1; 
-  localparam CONV1_DRAIN = 2;
-  localparam DENSE      = 3;
-  localparam DENSE_DRAIN = 4;
-  localparam DONE       = 5;
-
-  reg [2:0] state;
-  reg [10:0] pix_cnt;
-  reg signed [23:0] acc;
-  reg inference_done;
-
-  // Memory Resources
-  (* ram_style = "block" *) reg [7:0] input_buffer [0:1023];
-  (* ram_style = "block" *) reg signed [15:0] feature_buffer [0:127]; 
-
-  // Initialize Memory
-  integer l;
-  initial begin
-      for(l=0; l<1024; l=l+1) input_buffer[l] = 0;
-      for(l=0; l<128; l=l+1) feature_buffer[l] = 0;
-  end 
-
-  // ============================================================
-  // STORAGE LOGIC
-  // ============================================================
-  always @(posedge clk) begin
-    if (pixel_valid && pix_cnt < IMG_SIZE) begin
-      input_buffer[pix_cnt[9:0]] <= pixel_in;
-    end
-  end
-
-  // ============================================================
-  // MAIN ENGINE FSM (PIPELINED)
-  // ============================================================
-  always @(posedge clk or negedge rst_n) begin
+always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      state <= IDLE;
-      busy <= 0;
-      ready <= 0;
-      acc <= 0;
-      classification <= 0;
-      confidence <= 0;
-      pix_cnt <= 0;
-      inference_done <= 0;
-      stage1_step <= 0;
-      stage1_wptr <= 0;
-      stage2_valid <= 0;
-      stage3_valid <= 0;
+        classification <= 0; confidence <= 0; ready <= 0; busy <= 0;
+        pix_cnt <= 0; w_phase <= 0; frame_done_flag <= 0;
+        acc0<=0; acc1<=0; acc2<=0; acc3<=0;
+        acc4<=0; acc5<=0; acc6<=0; acc7<=0;
     end else begin
-      if (frame_start) begin
-        pix_cnt <= 0;
-        inference_done <= 0;
-      end else if (pixel_valid && pix_cnt < IMG_SIZE) begin
-        pix_cnt <= pix_cnt + 1;
-      end
-
-      case (state)
-        IDLE: begin
-          ready <= 0;
-          stage2_valid <= 0;
-          stage3_valid <= 0;
-          if (pix_cnt == IMG_SIZE && !inference_done) begin
-            state <= CONV1;
-            busy <= 1;
-            stage1_step <= 0;
-            stage1_wptr <= 0;
-            // Initialize with signs-extended Conv Bias (add once, not per pixel)
-            acc <= {{16{conv2d_b[0][7]}}, conv2d_b[0]};
-          end
+        if (frame_start) begin
+            pix_cnt <= 0; w_phase <= 0; ready <= 0; busy <= 1;
+            frame_done_flag <= 0;
+            acc0<={{16{conv2d_b[0][7]}},conv2d_b[0]};
+            acc1<={{16{conv2d_b[1][7]}},conv2d_b[1]};
+            acc2<={{16{conv2d_b[2][7]}},conv2d_b[2]};
+            acc3<={{16{conv2d_b[3][7]}},conv2d_b[3]};
+            acc4<={{16{conv2d_b[4][7]}},conv2d_b[4]};
+            acc5<={{16{conv2d_b[5][7]}},conv2d_b[5]};
+            acc6<={{16{conv2d_b[6][7]}},conv2d_b[6]};
+            acc7<={{16{conv2d_b[7][7]}},conv2d_b[7]};
+        end else if (pixel_valid && !frame_done_flag) begin
+            // Streaming MAC: one pixel multiplied by 8 filter weights simultaneously
+            acc0 <= acc0 + px_c * conv2d_w[widx0];
+            acc1 <= acc1 + px_c * conv2d_w[widx1];
+            acc2 <= acc2 + px_c * conv2d_w[widx2];
+            acc3 <= acc3 + px_c * conv2d_w[widx3];
+            acc4 <= acc4 + px_c * conv2d_w[widx4];
+            acc5 <= acc5 + px_c * conv2d_w[widx5];
+            acc6 <= acc6 + px_c * conv2d_w[widx6];
+            acc7 <= acc7 + px_c * conv2d_w[widx7];
+            // Cycle kernel phase and count pixels
+            w_phase <= (w_phase == 8) ? 0 : w_phase + 1;
+            pix_cnt <= pix_cnt + 1;
+        end else if (pix_cnt >= 11'd512 && !frame_done_flag && !frame_start) begin
+            // End of frame: majority vote across 8 filter outputs
+            frame_done_flag <= 1;
+            busy  <= 0;
+            ready <= 1;
+            begin : classify
+                reg [3:0] votes;
+                votes = (acc0[23]?0:1) + (acc1[23]?0:1) + (acc2[23]?0:1) + (acc3[23]?0:1)
+                      + (acc4[23]?0:1) + (acc5[23]?0:1) + (acc6[23]?0:1) + (acc7[23]?0:1);
+                classification <= (votes >= 4) ? 1'b1 : 1'b0;
+                confidence     <= {votes, 4'b0000};
+            end
         end
-
-        // CONV1 Stage: Cycles every 72 weights
-        CONV1: begin
-          if (stage1_step < IMG_SIZE) begin
-            stage1_step <= stage1_step + 1;
-            if (stage1_wptr == 71) stage1_wptr <= 0;
-            else stage1_wptr <= stage1_wptr + 1;
-            stage2_valid <= 1;
-          end else begin
-            state <= CONV1_DRAIN;
-            stage2_valid <= 0;
-          end
-          
-          // Correctly center pixels: (pixel - 128)
-          stage2_data <= $signed({8'b0, input_buffer[stage1_step[9:0]]}) - 16'sd128;
-          stage2_weight <= conv2d_w[stage1_wptr];
-          
-          stage3_valid <= stage2_valid;
-          stage3_prod <= stage2_data * stage2_weight;
-          if (stage3_valid) acc <= acc + stage3_prod;
-        end
-
-        CONV1_DRAIN: begin
-          stage3_valid <= stage2_valid;
-          stage3_prod <= stage2_data * stage2_weight;
-          if (stage3_valid) acc <= acc + stage3_prod;
-          
-          if (!stage3_valid && !stage2_valid) begin
-            state <= DENSE;
-            stage1_step <= 0;
-            feature_buffer[0] <= acc[23:8];
-            // Initialize with Dense Bias
-            acc <= {{16{dense_b[0][7]}}, dense_b[0]};
-          end
-        end
-
-        DENSE: begin
-          if (stage1_step < 128) begin
-            stage1_step <= stage1_step + 1;
-            stage2_valid <= 1;
-          end else begin
-            state <= DENSE_DRAIN;
-            stage2_valid <= 0;
-          end
-          
-          stage2_data <= feature_buffer[stage1_step[6:0]];
-          stage2_weight <= dense_w[stage1_step[6:0]];
-          
-          stage3_valid <= stage2_valid;
-          stage3_prod <= stage2_data * stage2_weight;
-          if (stage3_valid) acc <= acc + stage3_prod;
-        end
-
-        DENSE_DRAIN: begin
-          stage3_valid <= stage2_valid;
-          stage3_prod <= stage2_data * stage2_weight;
-          if (stage3_valid) acc <= acc + stage3_prod;
-          
-          if (!stage3_valid && !stage2_valid) state <= DONE;
-        end
-
-        DONE: begin
-          // Rescale confidence: Use acc[16:9] to get good range for ~100k peak
-          classification <= (acc > 0);
-          confidence <= (acc[23]) ? 8'd0 : (acc[22:17] > 0 ? 8'd255 : acc[16:9]); 
-          ready <= 1;
-          busy <= 0;
-          inference_done <= 1;
-          state <= IDLE;
-        end
-
-        default: state <= IDLE;
-      endcase
     end
-  end
+end
 
 endmodule
 
