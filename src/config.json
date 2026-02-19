@@ -3,7 +3,7 @@
   "VERILOG_FILES": [
     "dir::project.v"
   ],
-  "DIE_AREA": "0 0 320 500",
+  "DIE_AREA": "0 0 508.76 225.76",
   "CLOCK_PERIOD": 20,
   "CLOCK_PORT": "clk",
   "CLOCK_NET": "clk",
@@ -26,7 +26,7 @@
   "GRT_ALLOW_CONGESTION": 1,
   "FP_IO_HLENGTH": 2,
   "FP_IO_VLENGTH": 2,
-  "FP_PDN_VPITCH": 38.87,
+  "FP_PDN_VPITCH": 25.0,
   "DECAP_CELL": [
     "sky130_fd_sc_hd__decap_3",
     "sky130_fd_sc_hd__decap_4",
