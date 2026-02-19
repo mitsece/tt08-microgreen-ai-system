@@ -1,5 +1,6 @@
 {
-  "//": "Tiny Tapeout 08 OpenLane config - DO NOT add VERILOG_FILES here, the TT action injects it",
+  "DESIGN_NAME": "tt_um_precision_farming",
+  "VERILOG_FILES": "dir::src/project.v",
   "CLOCK_PORT": "clk",
   "CLOCK_PERIOD": 20,
   "PL_TARGET_DENSITY": 0.63,
