@@ -154,8 +154,10 @@ uart_tx #(
     .tx_data(uart_tx_data),
     .tx_valid(uart_tx_valid),
     .tx(uart_tx),
-    .tx_ready()
+    .tx_ready(_unused_tx_ready)
 );
+
+wire _unused_tx_ready;
 
 // ============================================================
 // UART PACKET PARSER
@@ -439,6 +441,139 @@ initial begin
     conv2d_b[6] = -8'd54;
     conv2d_b[7] = -8'd81;
 end
+// Layer: dense
+(* ram_style = "block" *) reg signed [7:0] dense_w [0:127];
+initial begin
+    dense_w[0] = 8'd26;
+    dense_w[1] = 8'd61;
+    dense_w[2] = -8'd35;
+    dense_w[3] = -8'd76;
+    dense_w[4] = -8'd34;
+    dense_w[5] = -8'd83;
+    dense_w[6] = 8'd26;
+    dense_w[7] = -8'd21;
+    dense_w[8] = -8'd63;
+    dense_w[9] = 8'd112;
+    dense_w[10] = 8'd25;
+    dense_w[11] = 8'd28;
+    dense_w[12] = 8'd117;
+    dense_w[13] = 8'd58;
+    dense_w[14] = -8'd17;
+    dense_w[15] = -8'd82;
+    dense_w[16] = -8'd42;
+    dense_w[17] = 8'd118;
+    dense_w[18] = -8'd13;
+    dense_w[19] = -8'd4;
+    dense_w[20] = 8'd25;
+    dense_w[21] = 8'd7;
+    dense_w[22] = 8'd62;
+    dense_w[23] = -8'd55;
+    dense_w[24] = 8'd95;
+    dense_w[25] = 8'd39;
+    dense_w[26] = 8'd111;
+    dense_w[27] = -8'd23;
+    dense_w[28] = -8'd100;
+    dense_w[29] = -8'd99;
+    dense_w[30] = -8'd94;
+    dense_w[31] = -8'd53;
+    dense_w[32] = 8'd101;
+    dense_w[33] = -8'd60;
+    dense_w[34] = 8'd108;
+    dense_w[35] = 8'd92;
+    dense_w[36] = -8'd110;
+    dense_w[37] = 8'd28;
+    dense_w[38] = 8'd47;
+    dense_w[39] = 8'd6;
+    dense_w[40] = 8'd127;
+    dense_w[41] = 8'd10;
+    dense_w[42] = -8'd16;
+    dense_w[43] = 8'd106;
+    dense_w[44] = 8'd30;
+    dense_w[45] = -8'd55;
+    dense_w[46] = 8'd23;
+    dense_w[47] = 8'd79;
+    dense_w[48] = 8'd67;
+    dense_w[49] = -8'd15;
+    dense_w[50] = 8'd56;
+    dense_w[51] = 8'd38;
+    dense_w[52] = -8'd20;
+    dense_w[53] = -8'd2;
+    dense_w[54] = -8'd16;
+    dense_w[55] = 8'd75;
+    dense_w[56] = -8'd4;
+    dense_w[57] = 8'd17;
+    dense_w[58] = 8'd110;
+    dense_w[59] = 8'd99;
+    dense_w[60] = -8'd54;
+    dense_w[61] = -8'd67;
+    dense_w[62] = -8'd96;
+    dense_w[63] = 8'd82;
+    dense_w[64] = -8'd57;
+    dense_w[65] = 8'd54;
+    dense_w[66] = 8'd87;
+    dense_w[67] = 8'd35;
+    dense_w[68] = 8'd39;
+    dense_w[69] = 8'd0;
+    dense_w[70] = 8'd16;
+    dense_w[71] = 8'd62;
+    dense_w[72] = -8'd12;
+    dense_w[73] = 8'd98;
+    dense_w[74] = -8'd85;
+    dense_w[75] = 8'd34;
+    dense_w[76] = 8'd59;
+    dense_w[77] = 8'd87;
+    dense_w[78] = 8'd123;
+    dense_w[79] = -8'd7;
+    dense_w[80] = 8'd46;
+    dense_w[81] = -8'd66;
+    dense_w[82] = 8'd113;
+    dense_w[83] = 8'd113;
+    dense_w[84] = 8'd54;
+    dense_w[85] = 8'd63;
+    dense_w[86] = 8'd4;
+    dense_w[87] = 8'd103;
+    dense_w[88] = 8'd86;
+    dense_w[89] = -8'd10;
+    dense_w[90] = 8'd10;
+    dense_w[91] = 8'd66;
+    dense_w[92] = -8'd66;
+    dense_w[93] = -8'd73;
+    dense_w[94] = -8'd111;
+    dense_w[95] = -8'd50;
+    dense_w[96] = 8'd94;
+    dense_w[97] = -8'd34;
+    dense_w[98] = 8'd100;
+    dense_w[99] = 8'd12;
+    dense_w[100] = 8'd39;
+    dense_w[101] = 8'd63;
+    dense_w[102] = 8'd37;
+    dense_w[103] = 8'd65;
+    dense_w[104] = 8'd107;
+    dense_w[105] = 8'd5;
+    dense_w[106] = -8'd9;
+    dense_w[107] = 8'd109;
+    dense_w[108] = -8'd36;
+    dense_w[109] = -8'd39;
+    dense_w[110] = 8'd45;
+    dense_w[111] = 8'd87;
+    dense_w[112] = -8'd24;
+    dense_w[113] = -8'd106;
+    dense_w[114] = 8'd111;
+    dense_w[115] = 8'd72;
+    dense_w[116] = 8'd33;
+    dense_w[117] = -8'd12;
+    dense_w[118] = -8'd90;
+    dense_w[119] = 8'd11;
+    dense_w[120] = -8'd42;
+    dense_w[121] = 8'd105;
+    dense_w[122] = 8'd0;
+    dense_w[123] = -8'd122;
+    dense_w[124] = 8'd70;
+    dense_w[125] = -8'd5;
+    dense_w[126] = 8'd109;
+    dense_w[127] = -8'd64;
+end
+
 reg signed [7:0] dense_b [0:7];
 initial begin
     dense_b[0] = -8'd42;
