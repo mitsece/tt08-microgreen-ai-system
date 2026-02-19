@@ -1,5 +1,6 @@
 // MONOLITHIC PROJECT FILE - CLEANED FOR ASIC SYNTHESIS
 `default_nettype none
+
 module tt_um_precision_farming (
     input  wire [7:0] ui_in,
     output wire [7:0] uo_out,
@@ -340,8 +341,8 @@ module cnn_inference (
 // No frame buffer needed � processes pixels on-the-fly
 // ============================================================
 
-// Conv weights: 8 filters x 9 weights = 72 total
-reg signed [7:0] conv2d_w [0:71];
+// Conv weights: 8 filters x 8 weights = 64 total (3-bit filter + 3-bit phase indexing)
+reg signed [7:0] conv2d_w [0:63];  // 8 filters x 8 weights = 64
 initial begin
     conv2d_w[0]=-8'd17; conv2d_w[1]=8'd35;  conv2d_w[2]=-8'd39; conv2d_w[3]=8'd17;
     conv2d_w[4]=-8'd13; conv2d_w[5]=8'd39;  conv2d_w[6]=-8'd11; conv2d_w[7]=8'd9;
@@ -359,8 +360,6 @@ initial begin
     conv2d_w[52]=8'd80; conv2d_w[53]=-8'd15;conv2d_w[54]=-8'd37;conv2d_w[55]=8'd59;
     conv2d_w[56]=-8'd29;conv2d_w[57]=8'd66; conv2d_w[58]=-8'd61;conv2d_w[59]=8'd78;
     conv2d_w[60]=-8'd54;conv2d_w[61]=8'd20; conv2d_w[62]=8'd18; conv2d_w[63]=-8'd87;
-    conv2d_w[64]=-8'd28;conv2d_w[65]=8'd59; conv2d_w[66]=8'd39; conv2d_w[67]=-8'd51;
-    conv2d_w[68]=8'd41; conv2d_w[69]=-8'd70;conv2d_w[70]=8'd111;conv2d_w[71]=-8'd2;
 end
 
 // Conv biases
@@ -376,15 +375,15 @@ reg [10:0] pix_cnt;
 reg [3:0]  w_phase;   // cycles 0-8 for 3x3 kernel position
 reg        frame_done_flag;
 
-// Weight index = filter*9 + phase
-wire [6:0] widx0 = {3'd0, w_phase[2:0]};  // filter 0: weights 0-8
-wire [6:0] widx1 = {3'd1, w_phase[2:0]};  // filter 1: weights 9-17
-wire [6:0] widx2 = {3'd2, w_phase[2:0]};  // filter 2: weights 18-26
-wire [6:0] widx3 = {3'd3, w_phase[2:0]};  // filter 3: weights 27-35
-wire [6:0] widx4 = {3'd4, w_phase[2:0]};  // filter 4: weights 36-44
-wire [6:0] widx5 = {3'd5, w_phase[2:0]};  // filter 5: weights 45-53
-wire [6:0] widx6 = {3'd6, w_phase[2:0]};  // filter 6: weights 54-62
-wire [6:0] widx7 = {3'd7, w_phase[2:0]};  // filter 7: weights 63-71
+// Weight index = filter*8 + phase ({filter[2:0], phase[2:0]} = 6-bit exact)
+wire [5:0] widx0 = {3'd0, w_phase[2:0]};  // filter 0: weights 0-7
+wire [5:0] widx1 = {3'd1, w_phase[2:0]};  // filter 1: weights 8-15
+wire [5:0] widx2 = {3'd2, w_phase[2:0]};  // filter 2: weights 16-23
+wire [5:0] widx3 = {3'd3, w_phase[2:0]};  // filter 3: weights 24-31
+wire [5:0] widx4 = {3'd4, w_phase[2:0]};  // filter 4: weights 32-39
+wire [5:0] widx5 = {3'd5, w_phase[2:0]};  // filter 5: weights 40-47
+wire [5:0] widx6 = {3'd6, w_phase[2:0]};  // filter 6: weights 48-55
+wire [5:0] widx7 = {3'd7, w_phase[2:0]};  // filter 7: weights 56-63
 
 wire signed [8:0]  px_c = $signed({1'b0, pixel_in}) - 9'sd128;
 
@@ -417,7 +416,7 @@ always @(posedge clk or negedge rst_n) begin
             acc6 <= acc6 + px_c * conv2d_w[widx6];
             acc7 <= acc7 + px_c * conv2d_w[widx7];
             // Cycle kernel phase and count pixels
-            w_phase <= (w_phase == 8) ? 0 : w_phase + 1;
+            w_phase <= (w_phase == 7) ? 0 : w_phase + 1;
             pix_cnt <= pix_cnt + 1;
         end else if (pix_cnt >= 11'd512 && !frame_done_flag && !frame_start) begin
             // End of frame: majority vote across 8 filter outputs
