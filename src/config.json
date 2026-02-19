@@ -6,7 +6,7 @@
   "CLOCK_PORT": "clk",
   "CLOCK_NET": "clk",
   "CLOCK_PERIOD": 20,
-  "PL_TARGET_DENSITY": 0.6,
+  "PL_TARGET_DENSITY": 0.65,
   "RUN_LINTER": 1,
   "FP_SIZING": "absolute",
   "DIE_AREA": "0 0 508.76 225.76",
