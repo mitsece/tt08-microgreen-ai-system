@@ -1,10 +1,8 @@
 {
-  "//": "OpenLane configuration for Tiny Tapeout tt08",
-  "DESIGN_NAME": "tt_um_precision_farming",
-  "VERILOG_FILES": "dir::../../src/project.v",
+  "//": "Tiny Tapeout 08 OpenLane config - DO NOT add VERILOG_FILES here, the TT action injects it",
   "CLOCK_PORT": "clk",
   "CLOCK_PERIOD": 20,
-  "PL_TARGET_DENSITY": 0.65,
+  "PL_TARGET_DENSITY": 0.63,
   "PL_RESIZER_HOLD_SLACK_MARGIN": 0.1,
   "GLB_RESIZER_HOLD_SLACK_MARGIN": 0.05,
   "RUN_LINTER": 1,
@@ -31,7 +29,6 @@
     "sky130_ef_sc_hd__decap_12"
   ],
   "RUN_CTS": 1,
-  "DESIGN_IS_CORE": 0,
   "FP_PDN_MULTILAYER": false,
   "RT_MAX_LAYER": "met4",
   "MAGIC_DEF_LABELS": 0,
