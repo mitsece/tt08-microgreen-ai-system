@@ -11,7 +11,7 @@ module tt_um_precision_farming (
     input  wire       clk,
     input  wire       rst_n
 );
-  wire [7:0] status_leds;
+  wire [6:0] status_leds;
   wire [2:0] alert_level;
   wire harvest_alert;
   wire uart_tx;
@@ -276,7 +276,7 @@ end
 // STATUS LED GENERATION
 // ============================================================
 
-(* IOB = "true" *) reg [7:0] status_leds_reg;
+(* IOB = "true" *) reg [6:0] status_leds_reg;
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -289,7 +289,6 @@ always @(posedge clk or negedge rst_n) begin
         status_leds_reg[4] <= harvest_ready_final;   // Final: harvest!
         status_leds_reg[5] <= |fault_flags;          // Any fault
         status_leds_reg[6] <= uart_rx_valid;         // UART activity
-        status_leds_reg[7] <= 1'b1;                  // Heartbeat (always on)
     end
 end
 
@@ -773,7 +772,6 @@ module camera_interface (
     input wire rst_n,
     
     // External Camera Signals
-    input wire cam_pclk,
     input wire cam_vsync,
     input wire cam_href,
     input wire [7:0] cam_data,
@@ -789,7 +787,7 @@ module camera_interface (
     // (Simplified synchronization for simulation)
     // In real hardware, we'd use proper 2-stage synchronizers or FIFO
     
-    reg vsync_d, href_d;
+    reg vsync_d;
     
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
