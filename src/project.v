@@ -18,7 +18,7 @@ module tt_um_precision_farming (
   wire fault_detected;
 
   main_processor_asic main_proc (
-    .clk(clk), .rst_n(rst_n & ena), .cam_pclk(clk), .cam_href(uio_in[5]),
+    .clk(clk), .rst_n(rst_n & ena), .cam_href(uio_in[5]),
     .cam_vsync(uio_in[6]), .cam_data(ui_in), .uart_rx(uio_in[0]), .uart_tx(uart_tx),
     .harvest_alert(harvest_alert), .alert_level(alert_level), .status_leds(status_leds[6:0]), .fault_detected(fault_detected)
   );
@@ -47,7 +47,6 @@ module main_processor_asic (
     input wire rst_n,            // Active-low reset
     
     // Camera interface (OV7670)
-    input wire cam_pclk,         // Pixel clock from camera
     input wire cam_href,         // Horizontal reference
     input wire cam_vsync,        // Vertical sync
     input wire [7:0] cam_data,   // 8-bit pixel data
@@ -102,7 +101,6 @@ reg harvest_ready_final;
   camera_interface cam_if (
     .clk(clk),
     .rst_n(rst_n),
-    .cam_pclk(cam_pclk),
     .cam_href(cam_href),
     .cam_vsync(cam_vsync),
     .cam_data(cam_data),
