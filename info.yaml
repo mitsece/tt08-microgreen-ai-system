@@ -5,12 +5,11 @@ project:
   author: "User"
   license: "Apache-2.0"
   language: "Verilog"
-  clock_hz: 100000000
-  tiles: "3x2"
+  clock_hz: 50000000
+  tiles: "1x1"
   top_module: "tt_um_precision_farming"
   source_files:
     - "project.v"
-
 pinout:
   ui[0]: "Camera Bit 0"
   ui[1]: "Camera Bit 1"
@@ -22,21 +21,19 @@ pinout:
   ui[7]: "Camera Bit 7"
   uo[0]: "LED Busy"
   uo[1]: "LED Ready"
-  uo[2]: "LED Harvest"
-  uo[3]: "LED Sensors"
-  uo[4]: "LED Final"
+  uo[2]: "LED Harvest CNN"
+  uo[3]: "LED Sensors OK"
+  uo[4]: "LED Final Harvest"
   uo[5]: "LED Fault"
-  uo[6]: "LED Activity"
-  uo[7]: "ALARM"
-  uio[0]: "UART RX"
-  uio[1]: "RSVD"
-  uio[2]: "RSVD"
-  uio[3]: "RSVD"
-  uio[4]: "RSVD"
-  uio[5]: "HREF"
-  uio[6]: "VSYNC"
-  uio[7]: "MODE"
-
-
+  uo[6]: "LED UART Activity"
+  uo[7]: "Harvest Alarm"
+  uio[0]: "UART TX (out)"
+  uio[1]: ""
+  uio[2]: ""
+  uio[3]: ""
+  uio[4]: ""
+  uio[5]: "Cam HREF (in)"
+  uio[6]: "Cam VSYNC (in)"
+  uio[7]: ""
 # Do not change!
 yaml_version: 6
