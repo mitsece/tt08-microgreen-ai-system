@@ -3,6 +3,7 @@
   "VERILOG_FILES": [
     "dir::project.v"
   ],
+  "DIE_AREA": "0 0 320 500",
   "CLOCK_PERIOD": 20,
   "CLOCK_PORT": "clk",
   "CLOCK_NET": "clk",
